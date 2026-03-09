@@ -20,6 +20,7 @@ async def synthesize(text: str) -> bytes | None:
                 model=TTS_MODEL,
                 voice=TTS_VOICE,
                 input=text,
+                instructions="Speak clearly and naturally at a moderate pace. Enunciate each word precisely.",
                 response_format="mp3",
             ),
             timeout=OPENAI_TIMEOUT,

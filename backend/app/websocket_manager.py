@@ -77,6 +77,8 @@ class ConnectionManager:
                         pass
         except WebSocketDisconnect:
             logger.info("Receiver: client disconnected")
+        except RuntimeError:
+            logger.info("Receiver: client already disconnected")
         except asyncio.CancelledError:
             logger.info("Receiver: cancelled")
             raise
@@ -92,16 +94,6 @@ class ConnectionManager:
         try:
             async for transcript in asr.listen():
                 start_time = time.monotonic()
-
-                try:
-                    await websocket.send_json({
-                        "type": "transcript",
-                        "subtype": "raw",
-                        "text": transcript,
-                        "timestamp": time.time(),
-                    })
-                except Exception:
-                    break
 
                 if not get_assist():
                     continue
@@ -151,7 +143,9 @@ class ConnectionManager:
                 try:
                     await websocket.send_json({"type": "status", "status": "speaking"})
                     await websocket.send_bytes(audio_bytes)
-                except Exception:
+                    logger.info("Sender: sent %d audio bytes to browser", len(audio_bytes))
+                except Exception as e:
+                    logger.error("Sender: failed to send audio: %s", e)
                     break
         except asyncio.CancelledError:
             logger.info("Sender: cancelled")

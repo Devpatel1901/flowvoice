@@ -9,7 +9,6 @@ export default function App() {
   const [active, setActive] = useState(false);
   const [status, setStatus] = useState("idle");
   const [assistMode, setAssistMode] = useState(true);
-  const [rawEntries, setRawEntries] = useState([]);
   const [cleanedEntries, setCleanedEntries] = useState([]);
   const [latency, setLatency] = useState(null);
 
@@ -17,11 +16,9 @@ export default function App() {
   assistRef.current = assistMode;
 
   const handleTranscript = useCallback((msg) => {
-    if (msg.subtype === "raw") {
-      setRawEntries((prev) => [...prev.slice(-49), msg.text]);
-      setStatus("listening");
-    } else if (msg.subtype === "cleaned") {
+    if (msg.subtype === "cleaned") {
       setCleanedEntries((prev) => [...prev.slice(-49), msg.text]);
+      setStatus("listening");
     }
   }, []);
 
@@ -33,21 +30,14 @@ export default function App() {
     setLatency(ms);
   }, []);
 
-  const { enqueue, clear: clearQueue } = usePlaybackQueue(
+  const { enqueue, clear: clearQueue, warmup } = usePlaybackQueue(
     () => setStatus("speaking"),
     () => setStatus("listening")
   );
 
-  const handleAudio = useCallback(
-    (data) => {
-      enqueue(data);
-    },
-    [enqueue]
-  );
-
   const { connected, connect, disconnect, sendBinary, sendJson } = useWebSocket({
     onTranscript: handleTranscript,
-    onAudio: handleAudio,
+    onAudio: enqueue,
     onStatus: handleStatus,
     onLatency: handleLatency,
   });
@@ -62,14 +52,14 @@ export default function App() {
       setActive(false);
       setStatus("idle");
     } else {
+      warmup();
       connect();
-      // Brief delay for WebSocket to connect before starting audio capture
       await new Promise((r) => setTimeout(r, 500));
       await startCapture();
       setActive(true);
       setStatus("listening");
     }
-  }, [active, connect, disconnect, startCapture, stopCapture, clearQueue]);
+  }, [active, connect, disconnect, startCapture, stopCapture, clearQueue, warmup]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -131,10 +121,7 @@ export default function App() {
           </div>
         )}
 
-        <TranscriptDisplay
-          rawEntries={rawEntries}
-          cleanedEntries={cleanedEntries}
-        />
+        <TranscriptDisplay entries={cleanedEntries} />
       </div>
     </div>
   );

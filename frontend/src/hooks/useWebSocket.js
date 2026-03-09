@@ -6,6 +6,15 @@ export default function useWebSocket({ onTranscript, onAudio, onStatus, onLatenc
   const wsRef = useRef(null);
   const [connected, setConnected] = useState(false);
 
+  const onTranscriptRef = useRef(onTranscript);
+  const onAudioRef = useRef(onAudio);
+  const onStatusRef = useRef(onStatus);
+  const onLatencyRef = useRef(onLatency);
+  onTranscriptRef.current = onTranscript;
+  onAudioRef.current = onAudio;
+  onStatusRef.current = onStatus;
+  onLatencyRef.current = onLatency;
+
   const connect = useCallback(() => {
     if (wsRef.current) return;
 
@@ -30,22 +39,22 @@ export default function useWebSocket({ onTranscript, onAudio, onStatus, onLatenc
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === "transcript") {
-            onTranscript?.(msg);
+            onTranscriptRef.current?.(msg);
           } else if (msg.type === "status") {
-            onStatus?.(msg.status);
+            onStatusRef.current?.(msg.status);
           } else if (msg.type === "latency") {
-            onLatency?.(msg.ms);
+            onLatencyRef.current?.(msg.ms);
           }
         } catch {
           // ignore malformed JSON
         }
       } else if (event.data instanceof ArrayBuffer) {
-        onAudio?.(event.data);
+        onAudioRef.current?.(event.data);
       }
     };
 
     wsRef.current = ws;
-  }, [onTranscript, onAudio, onStatus, onLatency]);
+  }, []);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
