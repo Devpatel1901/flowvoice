@@ -7,8 +7,10 @@ import StatusIndicator from "./components/StatusIndicator";
 import TranscriptDisplay from "./components/TranscriptDisplay";
 import RoomJoin from "./components/RoomJoin";
 
-const SOLO_WS_URL = "ws://localhost:8000/ws/audio";
-const ROOM_WS_BASE = "ws://localhost:8000/ws/room";
+// Derive the WebSocket URL dynamically so other devices on the same network can hit it.
+const wsHost = window.location.hostname;
+const SOLO_WS_URL = `ws://${wsHost}:8000/ws/audio`;
+const ROOM_WS_BASE = `ws://${wsHost}:8000/ws/room`;
 
 function roomWsUrl(roomId, role) {
   return `${ROOM_WS_BASE}/${roomId}/${role}`;
