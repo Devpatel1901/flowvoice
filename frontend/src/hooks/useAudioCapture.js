@@ -20,7 +20,13 @@ export default function useAudioCapture(sendBinary) {
     streamRef.current = stream;
 
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContextClass({ sampleRate: SAMPLE_RATE });
+    let ctx;
+    try {
+      ctx = new AudioContextClass({ sampleRate: SAMPLE_RATE });
+    } catch (e) {
+      console.warn("Could not create AudioContext with specific sampleRate, using default fallback", e);
+      ctx = new AudioContextClass(); // Fallback for Safari which might reject custom sampleRates
+    }
     contextRef.current = ctx;
 
     await ctx.audioWorklet.addModule("/audio-processor.js");

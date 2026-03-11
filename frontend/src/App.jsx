@@ -183,13 +183,26 @@ export default function App() {
     } else {
       setJoinError(null);
       if (mode === "solo") {
-        warmupTTS();
-        connect();
+        try {
+          warmupTTS();
+        } catch (e) {
+          console.warn(e);
+        }
+        try {
+          connect();
+        } catch (e) {
+          console.warn(e);
+        }
         await new Promise((r) => setTimeout(r, 500));
       }
-      await startCapture();
-      setActive(true);
-      setStatus("listening");
+      try {
+        await startCapture();
+        setActive(true);
+        setStatus("listening");
+      } catch (err) {
+        console.error("Start capture failed:", err);
+        setJoinError(`Microphone error: ${err.message || err.name || String(err)}`);
+      }
     }
   }, [
     active, mode, connect, disconnect,
