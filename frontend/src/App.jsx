@@ -21,7 +21,7 @@ export default function App() {
   const [role, setRole] = useState(null); // "stutter" | "listener"
 
   // ── Session state ───────────────────────────────────────────────────
-  const [active, setActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [status, setStatus] = useState("idle");
   const [assistMode, setAssistMode] = useState(true);
   const [cleanedEntries, setCleanedEntries] = useState([]);
@@ -127,7 +127,7 @@ export default function App() {
     disconnect();
     clearTTSQueue();
     stopPCM();
-    setActive(false);
+    setIsMuted(true);
     setMode(null);
     setRoomId(null);
     setRole(null);
@@ -143,6 +143,7 @@ export default function App() {
   useEffect(() => {
     if (mode === "room" && roomId && role) {
       setJoinError(null);
+      // Try initializing AudioContext right away so we can hear
       try {
         warmupTTS();
       } catch (e) {
@@ -166,38 +167,32 @@ export default function App() {
       };
       
       doConnect();
-    }
-  }, [mode, roomId, role, connect, warmupTTS, warmupPCM]);
-
-  // ── Toggle start / stop ─────────────────────────────────────────────
-  const handleToggle = useCallback(async () => {
-    if (active) {
-      stopCapture();
-      clearTTSQueue();
-      stopPCM();
-      setActive(false);
-      setStatus("idle");
-      if (mode === "solo") {
+      
+      return () => {
         disconnect();
       }
+    }
+  }, [mode, roomId, role, connect, warmupTTS, warmupPCM, disconnect]);
+
+  // ── Toggle Mute / Unmute ────────────────────────────────────────────
+  const handleToggleMute = useCallback(async () => {
+    if (!isMuted) {
+      stopCapture();
+      setIsMuted(true);
+      setStatus("idle");
     } else {
       setJoinError(null);
-      if (mode === "solo") {
-        try {
-          warmupTTS();
-        } catch (e) {
-          console.warn(e);
-        }
-        try {
-          connect();
-        } catch (e) {
-          console.warn(e);
-        }
+      
+      // If we are in Solo mode, the user isn't auto-connected until they start
+      if (mode === "solo" && !connected) {
+        try { warmupTTS(); } catch (e) { console.warn(e); }
+        try { connect(); } catch (e) { console.warn(e); }
         await new Promise((r) => setTimeout(r, 500));
       }
+      
       try {
         await startCapture();
-        setActive(true);
+        setIsMuted(false);
         setStatus("listening");
       } catch (err) {
         console.error("Start capture failed:", err);
@@ -205,10 +200,8 @@ export default function App() {
       }
     }
   }, [
-    active, mode, connect, disconnect,
-    startCapture, stopCapture,
-    clearTTSQueue, warmupTTS,
-    stopPCM,
+    isMuted, mode, connected, connect,
+    startCapture, stopCapture, warmupTTS
   ]);
 
   // ── Room join handlers ──────────────────────────────────────────────
@@ -216,6 +209,7 @@ export default function App() {
     setRoomId(id);
     setRole(r);
     setMode("room");
+    setIsMuted(true); // Always join muted
     setCleanedEntries([]);
     setLatency(null);
     setPeerConnected(false);
@@ -226,18 +220,17 @@ export default function App() {
     setMode("solo");
     setRole(null);
     setRoomId(null);
+    setIsMuted(true); // Start Solo mode muted
     setCleanedEntries([]);
     setLatency(null);
   }, []);
 
   const handleLeaveRoom = useCallback(() => {
-    if (active) {
-      stopCapture();
-      disconnect();
-      clearTTSQueue();
-      stopPCM();
-      setActive(false);
-    }
+    stopCapture();
+    disconnect();
+    clearTTSQueue();
+    stopPCM();
+    setIsMuted(true);
     setMode(null);
     setRoomId(null);
     setRole(null);
@@ -246,7 +239,7 @@ export default function App() {
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
-  }, [active, stopCapture, disconnect, clearTTSQueue, stopPCM]);
+  }, [stopCapture, disconnect, clearTTSQueue, stopPCM]);
 
   // ── Landing screen ──────────────────────────────────────────────────
   if (mode === null) {
@@ -301,14 +294,24 @@ export default function App() {
         <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-6 py-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={handleToggle}
-              className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-colors ${
-                active
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-emerald-600 hover:bg-emerald-700"
+              onClick={handleToggleMute}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
+                isMuted
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
               }`}
             >
-              {active ? "Stop" : "Start"}
+              {isMuted ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  <span>Unmute Mic</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                  <span>Mute Mic</span>
+                </>
+              )}
             </button>
             <StatusIndicator status={status} />
           </div>
@@ -356,7 +359,7 @@ export default function App() {
           </div>
         )}
 
-        {!connected && active && (
+        {!connected && (
           <div className="mb-4 rounded-lg border border-yellow-700 bg-yellow-900/30 px-4 py-2 text-sm text-yellow-300">
             Connecting to server...
           </div>
