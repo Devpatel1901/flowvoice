@@ -68,21 +68,22 @@ class RoomManager:
         logger.info("Room %s: %s joined", room_id, role)
         return room
 
+    async def leave(self, room_id: str, role: str, ws: WebSocket) -> None:
+        room = self._rooms.get(room_id)
         if not room:
             return
         
-        # Check if the websocket we are removing is actually the one currently stored,
-        # or just unconditionally remove it to clear the ghost state.
-        if role == "stutter":
-            room.stutter_ws = None
-        elif role == "listener":
-            room.listener_ws = None
-            
-        if room.stutter_ws is None and room.listener_ws is None:
-            del self._rooms[room_id]
-            logger.info("Room %s destroyed (empty)", room_id)
-        else:
-            logger.info("Room %s: %s left", room_id, role)
+        async with room._lock:
+            if role == "stutter" and room.stutter_ws is ws:
+                room.stutter_ws = None
+            elif role == "listener" and room.listener_ws is ws:
+                room.listener_ws = None
+                
+            if room.stutter_ws is None and room.listener_ws is None:
+                del self._rooms[room_id]
+                logger.info("Room %s destroyed (empty)", room_id)
+            else:
+                logger.info("Room %s: %s left", room_id, role)
 
     def room_status(self, room_id: str) -> dict:
         room = self._rooms.get(room_id)

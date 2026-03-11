@@ -65,7 +65,7 @@ class RoomConnectionHandler:
                 
             # Remove from room BEFORE we spend time closing ASR, 
             # so new connections don't see a ghost user
-            self._mgr.leave(room_id, role)
+            await self._mgr.leave(room_id, role, websocket)
             logger.info("Room %s: %s cleaned up", room_id, role)
 
     # ── Stutter-user pipeline ──────────────────────────────────────────
