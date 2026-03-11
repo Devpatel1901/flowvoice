@@ -57,5 +57,11 @@ export default function usePCMPlayback() {
     }
   }, []);
 
-  return { warmup, feed, stop };
+  const clear = useCallback(() => {
+    if (workletRef.current) {
+      workletRef.current.port.postMessage("clear");
+    }
+  }, []);
+
+  return { warmup, feed, stop, clear };
 }

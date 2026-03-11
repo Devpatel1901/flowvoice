@@ -10,6 +10,13 @@ class PCMPlaybackProcessor extends AudioWorkletProcessor {
 
     // Receive ArrayBuffer (Int16 PCM) from the main thread
     this.port.onmessage = (event) => {
+      if (event.data === "clear") {
+        this.buffer.fill(0);
+        this.writeOffset = 0;
+        this.readOffset = 0;
+        this.bufferedItems = 0;
+        return;
+      }
       const pcm16 = new Int16Array(event.data);
       for (let i = 0; i < pcm16.length; i++) {
         // Convert 16-bit PCM to Float32 (-1.0 to 1.0)

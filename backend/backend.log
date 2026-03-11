@@ -1,0 +1,60 @@
+2026-03-11 01:17:41,123 [app.room_manager] INFO: Room vofnin created
+2026-03-11 01:17:41,124 [app.room_manager] INFO: Room vofnin: stutter joined
+2026-03-11 01:17:41,124 [app.room_handler] INFO: Room vofnin: stutter connected
+2026-03-11 01:17:41,444 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-11 01:17:41,446 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-11 01:17:42,135 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-11 01:17:44,917 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-11 01:17:50,138 [app.room_manager] INFO: Room vofnin: listener joined
+2026-03-11 01:17:50,139 [app.room_handler] INFO: Room vofnin: listener connected
+2026-03-11 01:18:13,083 [app.room_handler] INFO: Listener receiver: client already disconnected
+2026-03-11 01:18:24,770 [app.room_manager] INFO: Room pd9tnz created
+2026-03-11 01:18:24,770 [app.room_manager] INFO: Room pd9tnz: stutter joined
+2026-03-11 01:18:24,770 [app.room_handler] INFO: Room pd9tnz: stutter connected
+2026-03-11 01:18:25,362 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-11 01:18:25,364 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-11 01:18:25,679 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-11 01:18:38,959 [app.room_manager] INFO: Room mn0ryb created
+2026-03-11 01:18:38,960 [app.room_manager] INFO: Room mn0ryb: listener joined
+2026-03-11 01:18:38,960 [app.room_handler] INFO: Room mn0ryb: listener connected
+2026-03-11 01:18:41,567 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-11 01:18:44,953 [app.room_manager] INFO: Room mn0ryb: stutter joined
+2026-03-11 01:18:44,954 [app.room_handler] INFO: Room mn0ryb: stutter connected
+2026-03-11 01:18:45,491 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-11 01:18:45,493 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-11 01:18:46,123 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-11 01:18:55,081 [app.asr_service] INFO: ASR: manually committed audio buffer
+2026-03-11 01:18:55,081 [app.room_handler] INFO: Stutter receiver: received mute event, committing audio
+2026-03-11 01:18:55,539 [app.asr_service] INFO: ASR: final transcript: Mic check, hello.
+2026-03-11 01:18:56,753 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-11 01:18:56,762 [app.cleanup_service] INFO: Cleanup: 'Mic check, hello.' → 'Mic check, hello.'
+2026-03-11 01:18:57,737 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/audio/speech "HTTP/1.1 200 OK"
+2026-03-11 01:18:57,739 [app.tts_service] INFO: TTS: synthesized 33792 bytes for 'Mic check, hello.'
+2026-03-11 01:18:57,741 [app.room_handler] INFO: Room mn0ryb: sent 33792 TTS bytes to listener
+2026-03-11 01:19:11,531 [app.asr_service] INFO: ASR: manually committed audio buffer
+2026-03-11 01:19:11,532 [app.room_handler] INFO: Stutter receiver: received mute event, committing audio
+2026-03-11 01:19:12,112 [app.asr_service] INFO: ASR: final transcript: Hear me?
+2026-03-11 01:19:12,726 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-11 01:19:12,728 [app.cleanup_service] INFO: Cleanup: 'Hear me?' → 'Hear me?'
+2026-03-11 01:19:13,501 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/audio/speech "HTTP/1.1 200 OK"
+2026-03-11 01:19:13,509 [app.tts_service] INFO: TTS: synthesized 27264 bytes for 'Hear me?'
+2026-03-11 01:19:13,510 [app.asr_service] ERROR: ASR: API error: {'type': 'invalid_request_error', 'code': 'input_audio_buffer_commit_empty', 'message': 'Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.', 'param': None, 'event_id': None}
+2026-03-11 01:19:13,513 [app.room_handler] INFO: Room mn0ryb: sent 27264 TTS bytes to listener
+2026-03-11 01:19:58,981 [app.asr_service] INFO: ASR: manually committed audio buffer
+2026-03-11 01:19:58,981 [app.room_handler] INFO: Stutter receiver: received mute event, committing audio
+2026-03-11 01:19:59,265 [app.asr_service] INFO: ASR: final transcript: دونوں چالو ہے فوریو
+2026-03-11 01:20:00,015 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-11 01:20:00,018 [app.cleanup_service] INFO: Cleanup: 'دونوں چالو ہے فوریو' → 'دونوں چالو ہے فوریو'
+2026-03-11 01:20:00,957 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/audio/speech "HTTP/1.1 200 OK"
+2026-03-11 01:20:00,960 [app.tts_service] INFO: TTS: synthesized 48768 bytes for 'دونوں چالو ہے فوریو'
+2026-03-11 01:20:00,963 [app.room_handler] INFO: Room mn0ryb: sent 48768 TTS bytes to listener
+2026-03-11 01:21:08,164 [app.asr_service] INFO: ASR: manually committed audio buffer
+2026-03-11 01:21:08,169 [app.room_handler] INFO: Stutter receiver: received mute event, committing audio
+2026-03-11 01:21:08,948 [app.asr_service] INFO: ASR: final transcript: If you have a student that stutters, then please do these three things. Work wit
+2026-03-11 01:21:09,874 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-11 01:21:09,876 [app.cleanup_service] INFO: Cleanup: 'If you have a student that stutters, then please do these th' → 'If you have a student that stutters, then please do these th'
+2026-03-11 01:21:10,693 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/audio/speech "HTTP/1.1 200 OK"
+2026-03-11 01:21:11,892 [app.tts_service] INFO: TTS: synthesized 182400 bytes for 'If you have a student that stutters, then please do these th'
+2026-03-11 01:21:11,904 [app.room_handler] INFO: Room mn0ryb: sent 182400 TTS bytes to listener
+2026-03-11 01:21:32,314 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-11 01:21:35,042 [app.room_handler] INFO: Listener receiver: client already disconnected

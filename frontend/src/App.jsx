@@ -87,12 +87,14 @@ export default function App() {
     warmup: warmupPCM,
     feed: feedPCM,
     stop: stopPCM,
+    clear: clearPCM,
   } = usePCMPlayback();
 
   // ── Interrupt handler (listener stops TTS when they speak) ──────────
   const handleInterrupt = useCallback(() => {
     clearTTSQueue();
-  }, [clearTTSQueue]);
+    clearPCM();
+  }, [clearTTSQueue, clearPCM]);
 
   // ── Wire audio callbacks based on role ──────────────────────────────
   const handleAudio = useCallback(
@@ -134,6 +136,7 @@ export default function App() {
     stopCapture();
     disconnect();
     clearTTSQueue();
+    clearPCM();
     stopPCM();
     setIsMuted(true);
     setMode(null);
@@ -144,7 +147,7 @@ export default function App() {
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
-  }, [stopCapture, disconnect, clearTTSQueue, stopPCM]);
+  }, [stopCapture, disconnect, clearTTSQueue, clearPCM, stopPCM]);
   partnerLeftRef.current = handlePartnerLeft;
 
   // ── Auto-connect when entering room ─────────────────────────────────
@@ -218,10 +221,11 @@ export default function App() {
       const isNowMuted = !prev;
       if (isNowMuted) {
         clearTTSQueue();
+        clearPCM();
       }
       return isNowMuted;
     });
-  }, [clearTTSQueue]);
+  }, [clearTTSQueue, clearPCM]);
 
   // ── Room join handlers ──────────────────────────────────────────────
   const handleJoinRoom = useCallback((id, r) => {
@@ -248,6 +252,7 @@ export default function App() {
     stopCapture();
     disconnect();
     clearTTSQueue();
+    clearPCM();
     stopPCM();
     setIsMuted(true);
     setMode(null);
@@ -258,7 +263,7 @@ export default function App() {
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
-  }, [stopCapture, disconnect, clearTTSQueue, stopPCM]);
+  }, [stopCapture, disconnect, clearTTSQueue, clearPCM, stopPCM]);
 
   // ── Landing screen ──────────────────────────────────────────────────
   if (mode === null) {
