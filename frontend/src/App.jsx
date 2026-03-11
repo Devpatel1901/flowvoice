@@ -22,6 +22,10 @@ export default function App() {
 
   // ── Session state ───────────────────────────────────────────────────
   const [isMuted, setIsMuted] = useState(true);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+  const speakerMutedRef = useRef(false);
+  speakerMutedRef.current = isSpeakerMuted;
+  
   const [status, setStatus] = useState("idle");
   const [assistMode, setAssistMode] = useState(true);
   const [cleanedEntries, setCleanedEntries] = useState([]);
@@ -93,14 +97,18 @@ export default function App() {
   // ── Wire audio callbacks based on role ──────────────────────────────
   const handleAudio = useCallback(
     (data) => {
-      enqueueTTS(data);
+      if (!speakerMutedRef.current) {
+        enqueueTTS(data);
+      }
     },
     [enqueueTTS]
   );
 
   const handlePCM = useCallback(
     (data) => {
-      feedPCM(data);
+      if (!speakerMutedRef.current) {
+        feedPCM(data);
+      }
     },
     [feedPCM]
   );
@@ -203,6 +211,16 @@ export default function App() {
     isMuted, mode, connected, connect,
     startCapture, stopCapture, warmupTTS
   ]);
+
+  const handleToggleSpeaker = useCallback(() => {
+    setIsSpeakerMuted(prev => {
+      const isNowMuted = !prev;
+      if (isNowMuted) {
+        clearTTSQueue();
+      }
+      return isNowMuted;
+    });
+  }, [clearTTSQueue]);
 
   // ── Room join handlers ──────────────────────────────────────────────
   const handleJoinRoom = useCallback((id, r) => {
@@ -310,6 +328,26 @@ export default function App() {
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                   <span>Mute Mic</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleToggleSpeaker}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
+                isSpeakerMuted
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+            >
+              {isSpeakerMuted ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.657 6.343a8 8 0 010 11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15l-4.5-5.5z" /><line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  <span>Unmute Speaker</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.121-2.121a8 8 0 000-11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15L5.8 15z" /></svg>
+                  <span>Mute Speaker</span>
                 </>
               )}
             </button>
