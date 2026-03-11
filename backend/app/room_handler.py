@@ -51,11 +51,20 @@ class RoomConnectionHandler:
             else:
                 await self._run_listener_pipeline(websocket, room)
         except WebSocketDisconnect:
-            logger.info("Room %s: %s disconnected", room_id, role)
+            logger.info("Room %s: %s disconnected (WebSocketDisconnect)", room_id, role)
         except Exception as e:
             logger.error("Room %s: %s error: %s", room_id, role, e)
         finally:
-            await self._mgr.notify_peer_disconnect(room, role)
+            logger.info("Room %s: %s cleaning up...", room_id, role)
+            
+            try:
+                # Notify peer (will fail safely if peer is already gone or we are gone)
+                await self._mgr.notify_peer_disconnect(room, role)
+            except Exception as e:
+                logger.error("Room %s: %s failed to notify peer: %s", room_id, role, e)
+                
+            # Remove from room BEFORE we spend time closing ASR, 
+            # so new connections don't see a ghost user
             self._mgr.leave(room_id, role)
             logger.info("Room %s: %s cleaned up", room_id, role)
 
@@ -87,7 +96,8 @@ class RoomConnectionHandler:
             for t in tasks:
                 if not t.done():
                     t.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            if tasks:
+                await asyncio.wait(tasks, timeout=2.0)
             await asr.close()
 
     async def _stutter_receiver(
@@ -182,7 +192,8 @@ class RoomConnectionHandler:
             for t in tasks:
                 if not t.done():
                     t.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            if tasks:
+                await asyncio.wait(tasks, timeout=2.0)
             room.listener_queue.clear()
 
     async def _listener_receiver(

@@ -50,10 +50,17 @@ class ConnectionManager:
         except Exception as e:
             logger.error("Connection error: %s", e)
         finally:
+            logger.info("Cleaning up connection...")
+            # Cancel all tasks immediately
             for task in tasks:
                 if not task.done():
                     task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Wait for tasks to acknowledge cancellation
+            if tasks:
+                # Use a small timeout to force exit if tasks hang
+                await asyncio.wait(tasks, timeout=2.0)
+                
             await asr.close()
             queue.clear()
             logger.info("Connection cleaned up")

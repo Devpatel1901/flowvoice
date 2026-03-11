@@ -107,6 +107,8 @@ class ASRService:
             logger.info("ASR: connection closed")
         except asyncio.CancelledError:
             logger.info("ASR: listen cancelled")
+            # Ensure the websocket is closed immediately if the task is cancelled
+            await self.close()
             raise
 
     async def close(self) -> None:

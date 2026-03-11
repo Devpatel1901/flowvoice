@@ -49,25 +49,35 @@ class RoomManager:
         async with room._lock:
             if role == "stutter":
                 if room.stutter_ws is not None:
-                    raise ValueError(f"Stutter role already taken in room {room_id}")
+                    try:
+                        await room.stutter_ws.close()
+                    except Exception:
+                        pass
+                    logger.warning(f"Evicted stale Stutter user in room {room_id}")
                 room.stutter_ws = ws
             elif role == "listener":
                 if room.listener_ws is not None:
-                    raise ValueError(f"Listener role already taken in room {room_id}")
+                    try:
+                        await room.listener_ws.close()
+                    except Exception:
+                        pass
+                    logger.warning(f"Evicted stale Listener user in room {room_id}")
                 room.listener_ws = ws
             else:
                 raise ValueError(f"Unknown role: {role}")
         logger.info("Room %s: %s joined", room_id, role)
         return room
 
-    def leave(self, room_id: str, role: str) -> None:
-        room = self._rooms.get(room_id)
         if not room:
             return
+        
+        # Check if the websocket we are removing is actually the one currently stored,
+        # or just unconditionally remove it to clear the ghost state.
         if role == "stutter":
             room.stutter_ws = None
         elif role == "listener":
             room.listener_ws = None
+            
         if room.stutter_ws is None and room.listener_ws is None:
             del self._rooms[room_id]
             logger.info("Room %s destroyed (empty)", room_id)
