@@ -10,6 +10,10 @@ from .websocket_manager import ConnectionManager
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("backend.log")
+    ]
 )
 
 app = FastAPI(title="FlowVoice API", version="0.1.0")

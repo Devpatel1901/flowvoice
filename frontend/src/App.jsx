@@ -188,6 +188,7 @@ export default function App() {
       stopCapture();
       setIsMuted(true);
       setStatus("idle");
+      sendJson({ type: "mute" });
     } else {
       setJoinError(null);
       

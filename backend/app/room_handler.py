@@ -110,7 +110,13 @@ class RoomConnectionHandler:
                 if "bytes" in data and data["bytes"]:
                     await asr.send_audio(data["bytes"])
                 elif "text" in data and data["text"]:
-                    pass  # no control messages needed from stutter user in room mode
+                    try:
+                        msg = json.loads(data["text"])
+                        if msg.get("type") == "mute":
+                            await asr.commit_audio()
+                            logger.info("Stutter receiver: received mute event, committing audio")
+                    except Exception:
+                        pass
         except WebSocketDisconnect:
             logger.info("Stutter receiver: client disconnected")
         except RuntimeError:

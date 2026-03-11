@@ -79,6 +79,16 @@ class ASRService:
             logger.warning("ASR: connection closed while sending audio")
             self._closed = True
 
+    async def commit_audio(self) -> None:
+        if self._ws is None or self._closed:
+            return
+        event = {"type": "input_audio_buffer.commit"}
+        try:
+            await self._ws.send(json.dumps(event))
+            logger.info("ASR: manually committed audio buffer")
+        except websockets.exceptions.ConnectionClosed:
+            self._closed = True
+
     async def listen(self) -> AsyncGenerator[str, None]:
         """Yields final transcript strings from the Realtime API."""
         if self._ws is None:
