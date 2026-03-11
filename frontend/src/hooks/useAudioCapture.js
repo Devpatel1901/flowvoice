@@ -9,40 +9,59 @@ export default function useAudioCapture(sendBinary) {
   const sourceRef = useRef(null);
 
   const start = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        sampleRate: SAMPLE_RATE,
-        channelCount: 1,
-        echoCancellation: true,
-        noiseSuppression: true,
-      },
-    });
-    streamRef.current = stream;
-
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    let ctx;
     try {
-      ctx = new AudioContextClass({ sampleRate: SAMPLE_RATE });
-    } catch (e) {
-      console.warn("Could not create AudioContext with specific sampleRate, using default fallback", e);
-      ctx = new AudioContextClass(); // Fallback for Safari which might reject custom sampleRates
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: SAMPLE_RATE,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
+      streamRef.current = stream;
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      let ctx = contextRef.current;
+      
+      // If the context is missing or closed, create a new one inside this user interaction tick
+      if (!ctx || ctx.state === "closed") {
+        try {
+          ctx = new AudioContextClass({ sampleRate: SAMPLE_RATE });
+        } catch (e) {
+          console.warn("Could not create AudioContext with specific sampleRate, using default fallback", e);
+          ctx = new AudioContextClass(); // Fallback for Safari
+        }
+        contextRef.current = ctx;
+      }
+      
+      // If it's suspended (typical in Safari/Chrome if created outside a click event), resume it NOW
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+
+      await ctx.audioWorklet.addModule("/audio-processor.js");
+
+      const source = ctx.createMediaStreamSource(stream);
+      sourceRef.current = source;
+
+      const worklet = new AudioWorkletNode(ctx, "pcm-processor");
+      workletRef.current = worklet;
+
+      worklet.port.onmessage = (event) => {
+        sendBinary(event.data);
+      };
+
+      source.connect(worklet);
+      // don't connect worklet to destination (no local playback of mic)
+    } catch (err) {
+      console.error("Failed to start capture:", err);
+      // Cleanup any partial state if we failed
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+      throw err; // Let the caller (App.jsx) pop up the red error box
     }
-    contextRef.current = ctx;
-
-    await ctx.audioWorklet.addModule("/audio-processor.js");
-
-    const source = ctx.createMediaStreamSource(stream);
-    sourceRef.current = source;
-
-    const worklet = new AudioWorkletNode(ctx, "pcm-processor");
-    workletRef.current = worklet;
-
-    worklet.port.onmessage = (event) => {
-      sendBinary(event.data);
-    };
-
-    source.connect(worklet);
-    // don't connect worklet to destination (no local playback of mic)
   }, [sendBinary]);
 
   const stop = useCallback(() => {

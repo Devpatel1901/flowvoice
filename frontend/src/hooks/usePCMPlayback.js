@@ -11,18 +11,22 @@ export default function usePCMPlayback() {
   const workletRef = useRef(null);
 
   const warmup = useCallback(async () => {
-    if (ctxRef.current) return;
-
-    const ctx = new (window.AudioContext || window.webkitAudioContext)({
-      sampleRate: SAMPLE_RATE,
-    });
-    ctxRef.current = ctx;
+    let ctx = ctxRef.current;
+    
+    if (!ctx || ctx.state === "closed") {
+      ctx = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: SAMPLE_RATE,
+      });
+      ctxRef.current = ctx;
+    }
 
     try {
-      await ctx.audioWorklet.addModule("/pcm-playback-processor.js");
-      const worklet = new AudioWorkletNode(ctx, "pcm-playback-processor");
-      worklet.connect(ctx.destination);
-      workletRef.current = worklet;
+      if (!workletRef.current) {
+        await ctx.audioWorklet.addModule("/pcm-playback-processor.js");
+        const worklet = new AudioWorkletNode(ctx, "pcm-playback-processor");
+        worklet.connect(ctx.destination);
+        workletRef.current = worklet;
+      }
     } catch (e) {
       console.warn("Could not initialize AudioWorklet (Safari might require secure context or direct interaction):", e);
     }
