@@ -143,11 +143,28 @@ export default function App() {
   useEffect(() => {
     if (mode === "room" && roomId && role) {
       setJoinError(null);
-      warmupTTS();
+      try {
+        warmupTTS();
+      } catch (e) {
+        console.warn("Failed to warmup TTS AudioContext:", e);
+      }
+      
       const doConnect = async () => {
-        if (role === "stutter") await warmupPCM();
-        connect();
+        if (role === "stutter") {
+          try {
+            await warmupPCM();
+          } catch (e) {
+            console.warn("Failed to warmup PCM AudioContext:", e);
+          }
+        }
+        try {
+          connect();
+        } catch (e) {
+          console.error("WebSocket connect failed:", e);
+          setJoinError("Failed to open connection to server.");
+        }
       };
+      
       doConnect();
     }
   }, [mode, roomId, role, connect, warmupTTS, warmupPCM]);

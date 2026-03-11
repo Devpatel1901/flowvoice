@@ -18,13 +18,21 @@ export default function usePCMPlayback() {
     });
     ctxRef.current = ctx;
 
-    await ctx.audioWorklet.addModule("/pcm-playback-processor.js");
-    const worklet = new AudioWorkletNode(ctx, "pcm-playback-processor");
-    worklet.connect(ctx.destination);
-    workletRef.current = worklet;
+    try {
+      await ctx.audioWorklet.addModule("/pcm-playback-processor.js");
+      const worklet = new AudioWorkletNode(ctx, "pcm-playback-processor");
+      worklet.connect(ctx.destination);
+      workletRef.current = worklet;
+    } catch (e) {
+      console.warn("Could not initialize AudioWorklet (Safari might require secure context or direct interaction):", e);
+    }
 
     if (ctx.state === "suspended") {
-      await ctx.resume();
+      try {
+        await ctx.resume();
+      } catch (e) {
+        console.warn("Could not resume PCM AudioContext:", e);
+      }
     }
   }, []);
 

@@ -19,7 +19,8 @@ export default function useAudioCapture(sendBinary) {
     });
     streamRef.current = stream;
 
-    const ctx = new AudioContext({ sampleRate: SAMPLE_RATE });
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContextClass({ sampleRate: SAMPLE_RATE });
     contextRef.current = ctx;
 
     await ctx.audioWorklet.addModule("/audio-processor.js");
