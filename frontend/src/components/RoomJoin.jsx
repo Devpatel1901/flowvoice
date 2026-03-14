@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 export default function RoomJoin({ onJoin, onSoloMode }) {
   const [roomId, setRoomId] = useState("");
   const [role, setRole] = useState("stutter");
@@ -14,7 +16,7 @@ export default function RoomJoin({ onJoin, onSoloMode }) {
     const timer = setTimeout(async () => {
       setChecking(true);
       try {
-        const res = await fetch(`http://localhost:8000/api/rooms/${roomId}`);
+        const res = await fetch(`${API_BASE}/api/rooms/${roomId}`);
         if (res.ok) setRoomStatus(await res.json());
       } catch {
         setRoomStatus(null);

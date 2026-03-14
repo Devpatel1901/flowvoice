@@ -58,3 +58,62 @@
 2026-03-11 01:21:11,904 [app.room_handler] INFO: Room mn0ryb: sent 182400 TTS bytes to listener
 2026-03-11 01:21:32,314 [app.room_handler] INFO: Stutter receiver: client already disconnected
 2026-03-11 01:21:35,042 [app.room_handler] INFO: Listener receiver: client already disconnected
+2026-03-14 17:51:08,121 [app.room_manager] INFO: Room demo created
+2026-03-14 17:51:08,121 [app.room_manager] INFO: Room demo: stutter joined
+2026-03-14 17:51:08,121 [app.room_handler] INFO: Room demo: stutter connected
+2026-03-14 17:51:08,973 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-14 17:51:08,977 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-14 17:51:09,994 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-14 17:51:10,825 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-14 17:55:30,572 [app.room_manager] INFO: Room demo created
+2026-03-14 17:55:30,572 [app.room_manager] INFO: Room demo: stutter joined
+2026-03-14 17:55:30,572 [app.room_handler] INFO: Room demo: stutter connected
+2026-03-14 17:55:31,223 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-14 17:55:31,226 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-14 17:55:31,630 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-14 17:55:34,561 [app.room_manager] INFO: Room demo: listener joined
+2026-03-14 17:55:34,562 [app.room_handler] INFO: Room demo: listener connected
+2026-03-14 17:55:40,250 [app.room_handler] INFO: Listener receiver: client already disconnected
+2026-03-14 17:55:42,997 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-14 17:58:52,786 [app.room_manager] INFO: Room abcd created
+2026-03-14 17:58:52,787 [app.room_manager] INFO: Room abcd: stutter joined
+2026-03-14 17:58:52,787 [app.room_handler] INFO: Room abcd: stutter connected
+2026-03-14 17:58:53,092 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-14 17:58:53,096 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-14 17:58:53,432 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-14 17:58:55,721 [app.room_manager] INFO: Room abcd: listener joined
+2026-03-14 17:58:55,721 [app.room_handler] INFO: Room abcd: listener connected
+2026-03-14 18:00:35,068 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-14 18:00:37,822 [app.room_handler] INFO: Listener receiver: client already disconnected
+2026-03-14 18:01:02,241 [app.room_manager] INFO: Room xyz created
+2026-03-14 18:01:02,242 [app.room_manager] INFO: Room xyz: stutter joined
+2026-03-14 18:01:02,242 [app.room_handler] INFO: Room xyz: stutter connected
+2026-03-14 18:01:02,959 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-14 18:01:02,962 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-14 18:01:03,575 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-14 18:01:07,404 [app.room_manager] INFO: Room xyz: listener joined
+2026-03-14 18:01:07,405 [app.room_handler] INFO: Room xyz: listener connected
+2026-03-14 18:01:27,714 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-14 18:01:29,081 [app.room_handler] INFO: Listener receiver: client already disconnected
+2026-03-14 18:09:38,597 [httpx] INFO: HTTP Request: POST https://api.elevenlabs.io/v1/voices/add "HTTP/1.1 200 OK"
+2026-03-14 18:09:38,602 [app.elevenlabs_service] INFO: ElevenLabs: cloned voice for stacy_1773526176650 → voice_id=JaicAJSceoYHKEdLYQwF
+2026-03-14 18:09:38,605 [app.voice_store] INFO: voices_store: saved profile for stacy_1773526176650 (voice_id=JaicAJSceoYHKEdLYQwF)
+2026-03-14 18:09:39,873 [app.room_manager] INFO: Room demo created
+2026-03-14 18:09:39,873 [app.room_manager] INFO: Room demo: stutter joined
+2026-03-14 18:09:39,873 [app.room_handler] INFO: Room demo: stutter connected
+2026-03-14 18:09:40,434 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/realtime/client_secrets "HTTP/1.1 200 OK"
+2026-03-14 18:09:40,437 [app.asr_service] INFO: ASR: transcription session created, connecting WebSocket
+2026-03-14 18:09:40,875 [app.asr_service] INFO: ASR: connected to OpenAI Realtime API (transcription session)
+2026-03-14 18:09:46,260 [app.room_manager] INFO: Room demo: listener joined
+2026-03-14 18:09:46,262 [app.room_handler] INFO: Room demo: listener connected
+2026-03-14 18:10:05,174 [app.asr_service] INFO: ASR: manually committed audio buffer
+2026-03-14 18:10:05,184 [app.room_handler] INFO: Stutter receiver: received mute event, committing audio
+2026-03-14 18:10:05,843 [app.asr_service] INFO: ASR: final transcript: You can listen to yourself stammer for 24 hours a day, or however much you talk.
+2026-03-14 18:10:07,985 [httpx] INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-14 18:10:08,005 [app.cleanup_service] INFO: Cleanup: 'You can listen to yourself stammer for 24 hours a day, or ho' → 'You can listen to yourself stammer for 24 hours a day, or ho'
+2026-03-14 18:10:09,729 [httpx] INFO: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/JaicAJSceoYHKEdLYQwF "HTTP/1.1 200 OK"
+2026-03-14 18:10:09,804 [app.elevenlabs_service] INFO: ElevenLabs TTS: 67753 bytes for 'You can listen to yourself stammer for 24 hours a day, or ho'
+2026-03-14 18:10:09,806 [app.asr_service] INFO: ASR: deleted item item_DJRTF53F2nUKssLXrWs7g from context
+2026-03-14 18:10:09,810 [app.room_handler] INFO: Room demo: sent 67753 TTS bytes to listener
+2026-03-14 18:10:25,528 [app.room_handler] INFO: Stutter receiver: client already disconnected
+2026-03-14 18:10:27,470 [app.room_handler] INFO: Listener receiver: client already disconnected
