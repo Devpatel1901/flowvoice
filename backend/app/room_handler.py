@@ -22,12 +22,12 @@ class RoomConnectionHandler:
         self._mgr = room_manager
 
     async def handle_connection(
-        self, websocket: WebSocket, room_id: str, role: str
+        self, websocket: WebSocket, room_id: str, role: str, voice_id: str | None = None
     ) -> None:
         await websocket.accept()
 
         try:
-            room = await self._mgr.join(room_id, role, websocket)
+            room = await self._mgr.join(room_id, role, websocket, voice_id=voice_id)
         except ValueError as e:
             await websocket.send_json({"type": "error", "message": str(e)})
             await websocket.close(code=4001)
@@ -154,7 +154,7 @@ class RoomConnectionHandler:
                 await self._mgr.send_json_to_both(room, transcript_msg)
 
                 # Synthesize and route to listener (held if listener is speaking)
-                audio_bytes = await synthesize(cleaned)
+                audio_bytes = await synthesize(cleaned, voice_id=room.voice_id)
                 if audio_bytes and room.listener_ws is not None:
                     await self._mgr.send_tts_to_listener(room, audio_bytes)
 

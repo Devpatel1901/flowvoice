@@ -6,6 +6,7 @@ import usePCMPlayback from "./hooks/usePCMPlayback";
 import StatusIndicator from "./components/StatusIndicator";
 import TranscriptDisplay from "./components/TranscriptDisplay";
 import RoomJoin from "./components/RoomJoin";
+import VoiceClonePage from "./pages/VoiceClonePage";
 
 // Derive the WebSocket URL dynamically so other devices on the same network can hit it via proxy
 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -13,15 +14,20 @@ const wsHost = window.location.host; // includes port (e.g., 5173)
 const SOLO_WS_URL = `${wsProtocol}//${wsHost}/ws/audio`;
 const ROOM_WS_BASE = `${wsProtocol}//${wsHost}/ws/room`;
 
-function roomWsUrl(roomId, role) {
-  return `${ROOM_WS_BASE}/${roomId}/${role}`;
+function roomWsUrl(roomId, role, voiceId) {
+  let url = `${ROOM_WS_BASE}/${roomId}/${role}`;
+  if (role === "stutter" && voiceId) {
+    url += `?voice_id=${encodeURIComponent(voiceId)}`;
+  }
+  return url;
 }
 
 export default function App() {
   // ── Navigation state ────────────────────────────────────────────────
-  const [mode, setMode] = useState(null); // null | "solo" | "room"
+  const [mode, setMode] = useState(null); // null | "solo" | "room" | "voiceClone"
   const [roomId, setRoomId] = useState(null);
   const [role, setRole] = useState(null); // "stutter" | "listener"
+  const [voiceId, setVoiceId] = useState(null);
 
   // ── Session state ───────────────────────────────────────────────────
   const [isMuted, setIsMuted] = useState(true);
@@ -43,7 +49,7 @@ export default function App() {
   // ── Determine WebSocket URL ─────────────────────────────────────────
   const wsUrl =
     mode === "room" && roomId && role
-      ? roomWsUrl(roomId, role)
+      ? roomWsUrl(roomId, role, voiceId)
       : SOLO_WS_URL;
 
   // ── Callbacks ───────────────────────────────────────────────────────
@@ -145,6 +151,7 @@ export default function App() {
     setMode(null);
     setRoomId(null);
     setRole(null);
+    setVoiceId(null);
     setStatus("idle");
     setCleanedEntries([]);
     setLatency(null);
@@ -233,12 +240,28 @@ export default function App() {
   const handleJoinRoom = useCallback((id, r) => {
     setRoomId(id);
     setRole(r);
-    setMode("room");
     setIsMuted(true); // Always join muted
     setCleanedEntries([]);
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
+    if (r === "stutter") {
+      setMode("voiceClone"); // Stutter user: voice clone step first
+    } else {
+      setMode("room"); // Listener: go straight to room
+    }
+  }, []);
+
+  const handleProceedFromVoiceClone = useCallback((vid) => {
+    setVoiceId(vid);
+    setMode("room");
+  }, []);
+
+  const handleBackFromVoiceClone = useCallback(() => {
+    setMode(null);
+    setRoomId(null);
+    setRole(null);
+    setVoiceId(null);
   }, []);
 
   const handleSoloMode = useCallback(() => {
@@ -260,6 +283,7 @@ export default function App() {
     setMode(null);
     setRoomId(null);
     setRole(null);
+    setVoiceId(null);
     setStatus("idle");
     setCleanedEntries([]);
     setLatency(null);
@@ -270,6 +294,17 @@ export default function App() {
   // ── Landing screen ──────────────────────────────────────────────────
   if (mode === null) {
     return <RoomJoin onJoin={handleJoinRoom} onSoloMode={handleSoloMode} />;
+  }
+
+  // ── Voice clone (stutter user only, before room) ────────────────────
+  if (mode === "voiceClone" && roomId && role === "stutter") {
+    return (
+      <VoiceClonePage
+        roomId={roomId}
+        onProceed={handleProceedFromVoiceClone}
+        onBack={handleBackFromVoiceClone}
+      />
+    );
   }
 
   // ── Main session UI ─────────────────────────────────────────────────

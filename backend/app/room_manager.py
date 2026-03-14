@@ -25,6 +25,7 @@ class Room:
     room_id: str
     stutter_ws: WebSocket | None = None
     listener_ws: WebSocket | None = None
+    voice_id: str | None = None
     vad: VADTracker = field(default_factory=VADTracker)
     listener_queue: PlaybackQueue = field(default_factory=PlaybackQueue)
     held_audio: list[tuple[float, bytes]] = field(default_factory=list)
@@ -44,7 +45,7 @@ class RoomManager:
     def get(self, room_id: str) -> Room | None:
         return self._rooms.get(room_id)
 
-    async def join(self, room_id: str, role: str, ws: WebSocket) -> Room:
+    async def join(self, room_id: str, role: str, ws: WebSocket, voice_id: str | None = None) -> Room:
         room = self.get_or_create(room_id)
         async with room._lock:
             if role == "stutter":
@@ -55,6 +56,7 @@ class RoomManager:
                         pass
                     logger.warning(f"Evicted stale Stutter user in room {room_id}")
                 room.stutter_ws = ws
+                room.voice_id = voice_id
             elif role == "listener":
                 if room.listener_ws is not None:
                     try:
