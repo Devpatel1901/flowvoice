@@ -16,7 +16,7 @@ logging.basicConfig(
     ]
 )
 
-app = FastAPI(title="FlowVoice API", version="0.1.0")
+app = FastAPI(title="StutterAI API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,

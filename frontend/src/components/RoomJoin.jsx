@@ -39,7 +39,7 @@ export default function RoomJoin({ onJoin, onSoloMode }) {
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
       <div className="w-full max-w-md px-4">
         <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">FlowVoice</h1>
+          <h1 className="text-3xl font-bold tracking-tight">StutterAI</h1>
           <p className="mt-1 text-sm text-gray-400">
             Real-time AI speech accessibility companion
           </p>

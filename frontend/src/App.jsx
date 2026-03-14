@@ -197,7 +197,6 @@ export default function App() {
       sendJson({ type: "mute" });
     } else {
       setJoinError(null);
-      
       // If we are in Solo mode, the user isn't auto-connected until they start
       if (mode === "solo" && !connected) {
         try { warmupTTS(); } catch (e) { console.warn(e); }
@@ -282,7 +281,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">FlowVoice</h1>
+          <h1 className="text-3xl font-bold tracking-tight">StutterAI</h1>
           <p className="mt-1 text-sm text-gray-400">
             Real-time AI speech accessibility companion
           </p>

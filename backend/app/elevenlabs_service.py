@@ -34,7 +34,7 @@ async def clone_voice(name: str, samples: list[tuple[bytes, str]]) -> str:
         response = await client.post(
             f"{_BASE}/voices/add",
             headers={"xi-api-key": ELEVENLABS_API_KEY},
-            data={"name": f"FlowVoice_{name}", "description": f"Voice clone for {name}"},
+            data={"name": f"StutterAI_{name}", "description": f"Voice clone for {name}"},
             files=files,
         )
         response.raise_for_status()
