@@ -43,8 +43,8 @@ class ASRService:
                                 "turn_detection": {
                                     "type": "server_vad",
                                     "threshold": 0.5,
-                                    "prefix_padding_ms": 500,
-                                    "silence_duration_ms": 1200,
+                                    "prefix_padding_ms": 300,
+                                    "silence_duration_ms": 600,
                                 },
                             }
                         },
@@ -79,6 +79,26 @@ class ASRService:
             logger.warning("ASR: connection closed while sending audio")
             self._closed = True
 
+    async def commit_audio(self) -> None:
+        if self._ws is None or self._closed:
+            return
+        event = {"type": "input_audio_buffer.commit"}
+        try:
+            await self._ws.send(json.dumps(event))
+            logger.info("ASR: manually committed audio buffer")
+        except websockets.exceptions.ConnectionClosed:
+            self._closed = True
+
+    async def delete_item(self, item_id: str) -> None:
+        if self._ws is None or self._closed:
+            return
+        event = {"type": "conversation.item.delete", "item_id": item_id}
+        try:
+            await self._ws.send(json.dumps(event))
+            logger.info("ASR: deleted item %s from context", item_id)
+        except websockets.exceptions.ConnectionClosed:
+            self._closed = True
+
     async def listen(self) -> AsyncGenerator[str, None]:
         """Yields final transcript strings from the Realtime API."""
         if self._ws is None:
@@ -96,9 +116,13 @@ class ASRService:
 
                 if event_type == "conversation.item.input_audio_transcription.completed":
                     transcript = event.get("transcript", "").strip()
+                    item_id = event.get("item_id", "")
                     if transcript:
                         logger.info("ASR: final transcript: %s", transcript[:80])
                         yield transcript
+                        if item_id:
+                            # Remove this transcript from OpenAI's context so it isn't repeated
+                            await self.delete_item(item_id)
 
                 elif event_type == "error":
                     logger.error("ASR: API error: %s", event.get("error", {}))
@@ -107,6 +131,8 @@ class ASRService:
             logger.info("ASR: connection closed")
         except asyncio.CancelledError:
             logger.info("ASR: listen cancelled")
+            # Ensure the websocket is closed immediately if the task is cancelled
+            await self.close()
             raise
 
     async def close(self) -> None:

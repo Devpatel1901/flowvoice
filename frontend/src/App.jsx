@@ -5,23 +5,37 @@ import usePlaybackQueue from "./hooks/usePlaybackQueue";
 import usePCMPlayback from "./hooks/usePCMPlayback";
 import StatusIndicator from "./components/StatusIndicator";
 import TranscriptDisplay from "./components/TranscriptDisplay";
+import ParticipantCard from "./components/ParticipantCard";
 import RoomJoin from "./components/RoomJoin";
+import VoiceClonePage from "./pages/VoiceClonePage";
 
-const SOLO_WS_URL = "ws://localhost:8000/ws/audio";
-const ROOM_WS_BASE = "ws://localhost:8000/ws/room";
+// Derive the WebSocket URL dynamically so other devices on the same network can hit it via proxy
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsHost = window.location.host; // includes port (e.g., 5173)
+const SOLO_WS_URL = `${wsProtocol}//${wsHost}/ws/audio`;
+const ROOM_WS_BASE = `${wsProtocol}//${wsHost}/ws/room`;
 
-function roomWsUrl(roomId, role) {
-  return `${ROOM_WS_BASE}/${roomId}/${role}`;
+function roomWsUrl(roomId, role, voiceId) {
+  let url = `${ROOM_WS_BASE}/${roomId}/${role}`;
+  if (role === "stutter" && voiceId) {
+    url += `?voice_id=${encodeURIComponent(voiceId)}`;
+  }
+  return url;
 }
 
 export default function App() {
   // ── Navigation state ────────────────────────────────────────────────
-  const [mode, setMode] = useState(null); // null | "solo" | "room"
+  const [mode, setMode] = useState(null); // null | "solo" | "room" | "voiceClone"
   const [roomId, setRoomId] = useState(null);
   const [role, setRole] = useState(null); // "stutter" | "listener"
+  const [voiceId, setVoiceId] = useState(null);
 
   // ── Session state ───────────────────────────────────────────────────
-  const [active, setActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+  const speakerMutedRef = useRef(false);
+  speakerMutedRef.current = isSpeakerMuted;
+  
   const [status, setStatus] = useState("idle");
   const [assistMode, setAssistMode] = useState(true);
   const [cleanedEntries, setCleanedEntries] = useState([]);
@@ -36,7 +50,7 @@ export default function App() {
   // ── Determine WebSocket URL ─────────────────────────────────────────
   const wsUrl =
     mode === "room" && roomId && role
-      ? roomWsUrl(roomId, role)
+      ? roomWsUrl(roomId, role, voiceId)
       : SOLO_WS_URL;
 
   // ── Callbacks ───────────────────────────────────────────────────────
@@ -83,24 +97,30 @@ export default function App() {
     warmup: warmupPCM,
     feed: feedPCM,
     stop: stopPCM,
+    clear: clearPCM,
   } = usePCMPlayback();
 
   // ── Interrupt handler (listener stops TTS when they speak) ──────────
   const handleInterrupt = useCallback(() => {
     clearTTSQueue();
-  }, [clearTTSQueue]);
+    clearPCM();
+  }, [clearTTSQueue, clearPCM]);
 
   // ── Wire audio callbacks based on role ──────────────────────────────
   const handleAudio = useCallback(
     (data) => {
-      enqueueTTS(data);
+      if (!speakerMutedRef.current) {
+        enqueueTTS(data);
+      }
     },
     [enqueueTTS]
   );
 
   const handlePCM = useCallback(
     (data) => {
-      feedPCM(data);
+      if (!speakerMutedRef.current) {
+        feedPCM(data);
+      }
     },
     [feedPCM]
   );
@@ -126,101 +146,166 @@ export default function App() {
     stopCapture();
     disconnect();
     clearTTSQueue();
+    clearPCM();
     stopPCM();
-    setActive(false);
+    setIsMuted(true);
     setMode(null);
     setRoomId(null);
     setRole(null);
+    setVoiceId(null);
     setStatus("idle");
     setCleanedEntries([]);
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
-  }, [stopCapture, disconnect, clearTTSQueue, stopPCM]);
+  }, [stopCapture, disconnect, clearTTSQueue, clearPCM, stopPCM]);
   partnerLeftRef.current = handlePartnerLeft;
 
   // ── Auto-connect when entering room ─────────────────────────────────
   useEffect(() => {
     if (mode === "room" && roomId && role) {
       setJoinError(null);
-      warmupTTS();
+      // Try initializing AudioContext right away so we can hear
+      try {
+        warmupTTS();
+      } catch (e) {
+        console.warn("Failed to warmup TTS AudioContext:", e);
+      }
+      
       const doConnect = async () => {
-        if (role === "stutter") await warmupPCM();
-        connect();
+        if (role === "stutter") {
+          try {
+            await warmupPCM();
+          } catch (e) {
+            console.warn("Failed to warmup PCM AudioContext:", e);
+          }
+        }
+        try {
+          connect();
+        } catch (e) {
+          console.error("WebSocket connect failed:", e);
+          setJoinError("Failed to open connection to server.");
+        }
       };
+      
       doConnect();
-    }
-  }, [mode, roomId, role, connect, warmupTTS, warmupPCM]);
-
-  // ── Toggle start / stop ─────────────────────────────────────────────
-  const handleToggle = useCallback(async () => {
-    if (active) {
-      stopCapture();
-      clearTTSQueue();
-      stopPCM();
-      setActive(false);
-      setStatus("idle");
-      if (mode === "solo") {
+      
+      return () => {
         disconnect();
       }
+    }
+  }, [mode, roomId, role, connect, warmupTTS, warmupPCM, disconnect]);
+
+  // ── Toggle Mute / Unmute ────────────────────────────────────────────
+  const handleToggleMute = useCallback(async () => {
+    if (!isMuted) {
+      stopCapture();
+      setIsMuted(true);
+      setStatus("idle");
+      sendJson({ type: "mute" });
     } else {
       setJoinError(null);
-      if (mode === "solo") {
-        warmupTTS();
-        connect();
+      // If we are in Solo mode, the user isn't auto-connected until they start
+      if (mode === "solo" && !connected) {
+        try { warmupTTS(); } catch (e) { console.warn(e); }
+        try { connect(); } catch (e) { console.warn(e); }
         await new Promise((r) => setTimeout(r, 500));
       }
-      await startCapture();
-      setActive(true);
-      setStatus("listening");
+      
+      try {
+        await startCapture();
+        setIsMuted(false);
+        setStatus("listening");
+      } catch (err) {
+        console.error("Start capture failed:", err);
+        setJoinError(`Microphone error: ${err.message || err.name || String(err)}`);
+      }
     }
   }, [
-    active, mode, connect, disconnect,
-    startCapture, stopCapture,
-    clearTTSQueue, warmupTTS,
-    stopPCM,
+    isMuted, mode, connected, connect,
+    startCapture, stopCapture, warmupTTS
   ]);
+
+  const handleToggleSpeaker = useCallback(() => {
+    setIsSpeakerMuted(prev => {
+      const isNowMuted = !prev;
+      if (isNowMuted) {
+        clearTTSQueue();
+        clearPCM();
+      }
+      return isNowMuted;
+    });
+  }, [clearTTSQueue, clearPCM]);
 
   // ── Room join handlers ──────────────────────────────────────────────
   const handleJoinRoom = useCallback((id, r) => {
     setRoomId(id);
     setRole(r);
-    setMode("room");
+    setIsMuted(true); // Always join muted
     setCleanedEntries([]);
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
+    if (r === "stutter") {
+      setMode("voiceClone"); // Stutter user: voice clone step first
+    } else {
+      setMode("room"); // Listener: go straight to room
+    }
+  }, []);
+
+  const handleProceedFromVoiceClone = useCallback((vid) => {
+    setVoiceId(vid);
+    setMode("room");
+  }, []);
+
+  const handleBackFromVoiceClone = useCallback(() => {
+    setMode(null);
+    setRoomId(null);
+    setRole(null);
+    setVoiceId(null);
   }, []);
 
   const handleSoloMode = useCallback(() => {
     setMode("solo");
     setRole(null);
     setRoomId(null);
+    setIsMuted(true); // Start Solo mode muted
     setCleanedEntries([]);
     setLatency(null);
   }, []);
 
   const handleLeaveRoom = useCallback(() => {
-    if (active) {
-      stopCapture();
-      disconnect();
-      clearTTSQueue();
-      stopPCM();
-      setActive(false);
-    }
+    stopCapture();
+    disconnect();
+    clearTTSQueue();
+    clearPCM();
+    stopPCM();
+    setIsMuted(true);
     setMode(null);
     setRoomId(null);
     setRole(null);
+    setVoiceId(null);
     setStatus("idle");
     setCleanedEntries([]);
     setLatency(null);
     setPeerConnected(false);
     setJoinError(null);
-  }, [active, stopCapture, disconnect, clearTTSQueue, stopPCM]);
+  }, [stopCapture, disconnect, clearTTSQueue, clearPCM, stopPCM]);
 
   // ── Landing screen ──────────────────────────────────────────────────
   if (mode === null) {
     return <RoomJoin onJoin={handleJoinRoom} onSoloMode={handleSoloMode} />;
+  }
+
+  // ── Voice clone (stutter user only, before room) ────────────────────
+  if (mode === "voiceClone" && roomId && role === "stutter") {
+    return (
+      <VoiceClonePage
+        roomId={roomId}
+        onProceed={handleProceedFromVoiceClone}
+        onBack={handleBackFromVoiceClone}
+      />
+    );
   }
 
   // ── Main session UI ─────────────────────────────────────────────────
@@ -228,134 +313,166 @@ export default function App() {
   const roleLabel =
     role === "stutter" ? "Stutter User" : role === "listener" ? "Listener" : "";
 
+  const isStutterSpeaking =
+    (role === "stutter" && !isMuted) || (role === "listener" && status === "speaking");
+  const isListenerSpeaking =
+    (role === "listener" && !isMuted) || (role === "stutter" && status === "speaking");
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">FlowVoice</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Real-time AI speech accessibility companion
-          </p>
+    <div
+      className="min-h-screen text-white flex flex-col"
+      style={{
+        background: "radial-gradient(circle at top, #1C1C22 0%, #0B0B0F 60%)",
+      }}
+    >
+      {/* Compact header */}
+      <header className="shrink-0 px-6 py-4 border-b border-[#2A2A32] bg-[#0B0B0F]/80 backdrop-blur-[10px]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#F5F5F7" }}>
+              UnStutterAI
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>
+              Real-time speech accessibility
+            </p>
+          </div>
           {isRoom && (
-            <div className="mt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
-              <span>
-                Room: <span className="text-gray-300 font-mono">{roomId}</span>
-              </span>
-              <span className="text-gray-700">|</span>
-              <span>
-                Role:{" "}
-                <span
-                  className={
-                    role === "stutter" ? "text-emerald-400" : "text-blue-400"
-                  }
-                >
-                  {roleLabel}
-                </span>
-              </span>
-              <span className="text-gray-700">|</span>
-              <span>
-                Partner:{" "}
-                <span
-                  className={
-                    peerConnected ? "text-emerald-400" : "text-gray-500"
-                  }
-                >
-                  {peerConnected ? "Connected" : "Waiting..."}
-                </span>
+            <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "#A1A1AA" }}>
+              <span>Room: <span className="font-mono" style={{ color: "#D1D5DB" }}>{roomId}</span></span>
+              <span style={{ color: "#2A2A32" }}>·</span>
+              <span style={{ color: role === "stutter" ? "#34D399" : "#4F9CF9" }}>{roleLabel}</span>
+              <span style={{ color: "#2A2A32" }}>·</span>
+              <span style={{ color: peerConnected ? "#34D399" : "#A1A1AA" }}>
+                {peerConnected ? "Partner connected" : "Waiting..."}
               </span>
             </div>
           )}
-        </header>
-
-        {/* Controls bar */}
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleToggle}
-              className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-colors ${
-                active
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-emerald-600 hover:bg-emerald-700"
-              }`}
-            >
-              {active ? "Stop" : "Start"}
-            </button>
-            <StatusIndicator status={status} />
-          </div>
-
-          <div className="flex items-center gap-4">
-            {latency !== null && (
-              <span className="text-xs text-gray-500">{latency}ms</span>
-            )}
-
-            {/* Assist toggle only in solo mode */}
-            {!isRoom && (
-              <label className="flex cursor-pointer items-center gap-2">
-                <span className="text-sm text-gray-400">Assist</span>
-                <div
-                  className={`relative h-6 w-11 rounded-full transition-colors ${
-                    assistMode ? "bg-emerald-600" : "bg-gray-600"
-                  }`}
-                  onClick={() => {
-                    const next = !assistMode;
-                    setAssistMode(next);
-                    sendJson({ type: "assist_toggle", enabled: next });
-                  }}
-                >
-                  <div
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                      assistMode ? "translate-x-5" : "translate-x-0.5"
-                    }`}
-                  />
-                </div>
-              </label>
-            )}
-
-            <button
-              onClick={handleLeaveRoom}
-              className="rounded-md border border-gray-600 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 transition-colors"
-            >
-              Leave
-            </button>
-          </div>
         </div>
+      </header>
 
-        {joinError && (
-          <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 px-4 py-2 text-sm text-red-300">
-            {joinError}
-          </div>
-        )}
+      {/* Alerts */}
+      {joinError && (
+        <div className="mx-4 mt-3 rounded-xl border border-[#FF453A] px-4 py-3 text-sm" style={{ background: "rgba(255,69,58,0.1)", color: "#FF453A" }}>
+          {joinError}
+        </div>
+      )}
+      {!connected && (
+        <div className="mx-4 mt-3 rounded-xl border border-[#4F9CF9] px-4 py-3 text-sm" style={{ background: "rgba(79,156,249,0.1)", color: "#4F9CF9" }}>
+          Connecting to server...
+        </div>
+      )}
+      {isRoom && !peerConnected && !joinError && (
+        <div className="mx-4 mt-3 rounded-xl border border-[#4F9CF9] px-4 py-3 text-sm" style={{ background: "rgba(79,156,249,0.1)", color: "#4F9CF9" }}>
+          Waiting for your partner to join room <span className="font-mono font-semibold">{roomId}</span>...
+        </div>
+      )}
 
-        {!connected && active && (
-          <div className="mb-4 rounded-lg border border-yellow-700 bg-yellow-900/30 px-4 py-2 text-sm text-yellow-300">
-            Connecting to server...
-          </div>
-        )}
+      {/* Main: participant grid + transcript side panel */}
+      <main className="flex-1 flex flex-col lg:flex-row gap-4 p-4 max-w-6xl w-full mx-auto overflow-auto">
+        <section className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 content-start min-h-0">
+          <ParticipantCard
+            label="Stutter User"
+            isSpeaking={isStutterSpeaking}
+            isYou={role === "stutter"}
+          />
+          <ParticipantCard
+            label={isRoom ? "Listener" : "Assistant"}
+            isSpeaking={isListenerSpeaking}
+            isYou={role === "listener"}
+          />
+        </section>
+        <aside className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col min-h-0">
+          <TranscriptDisplay entries={cleanedEntries} />
+        </aside>
+      </main>
 
-        {isRoom && !peerConnected && !joinError && (
-          <div className="mb-4 rounded-lg border border-blue-700 bg-blue-900/30 px-4 py-2 text-sm text-blue-300">
-            Waiting for your partner to join room{" "}
-            <span className="font-mono font-semibold">{roomId}</span>...
-          </div>
-        )}
+      {/* Role description (room only) */}
+      {isRoom && (
+        <div className="shrink-0 px-4 pb-3 max-w-6xl mx-auto w-full">
+          <p className="text-xs text-center" style={{ color: "#A1A1AA" }}>
+            {role === "stutter"
+              ? "Your speech is processed and sent as clean audio to your partner."
+              : "You hear your partner's cleaned speech. Your voice is relayed to them."}
+          </p>
+        </div>
+      )}
 
-        <TranscriptDisplay entries={cleanedEntries} />
-
-        {isRoom && (
-          <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800/30 px-4 py-3 text-xs text-gray-500">
-            {role === "stutter" ? (
-              <p>
-                Your speech is processed and sent as clean audio to your partner.
-                You will hear your partner&apos;s voice directly.
-              </p>
+      {/* Bottom meeting control bar */}
+      <div
+        className="shrink-0 border-t border-[#2A2A32] py-4 px-4 backdrop-blur-[10px]"
+        style={{ background: "rgba(11,11,15,0.8)" }}
+      >
+        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-4">
+          <button
+            onClick={handleToggleMute}
+            className="flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact"
+            style={{
+              background: isMuted ? "#FF453A" : "#1C1C22",
+            }}
+            title={isMuted ? "Unmute microphone" : "Mute microphone"}
+          >
+            {isMuted ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" strokeLinecap="round" /></svg>
             ) : (
-              <p>
-                You will hear your partner&apos;s cleaned speech.
-                Your voice is relayed directly to your partner.
-              </p>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
             )}
-          </div>
-        )}
+          </button>
+          <button
+            onClick={handleToggleSpeaker}
+            className={`flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact ${
+              !isSpeakerMuted ? "bg-[#4F9CF9] hover:bg-[#3B82F6]" : ""
+            }`}
+            style={isSpeakerMuted ? { background: "#1C1C22" } : undefined}
+            title={isSpeakerMuted ? "Unmute speaker" : "Mute speaker"}
+          >
+            {isSpeakerMuted ? (
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg>
+            )}
+          </button>
+          <StatusIndicator status={status} />
+          {latency !== null && (
+            <span className="text-xs px-2" style={{ color: "#A1A1AA" }}>{latency}ms</span>
+          )}
+          {!isRoom && (
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 transition-all btn-interact" style={{ background: "#1C1C22", border: "1px solid #2A2A32" }}>
+              <span className="text-sm" style={{ color: "#A1A1AA" }}>Assist</span>
+              <div
+                className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
+                  assistMode ? "" : "opacity-60"
+                }`}
+                style={{ background: assistMode ? "#34D399" : "#2A2A32" }}
+                onClick={() => {
+                  const next = !assistMode;
+                  setAssistMode(next);
+                  sendJson({ type: "assist_toggle", enabled: next });
+                }}
+              >
+                <div
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                    assistMode ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </label>
+          )}
+          <button
+            onClick={handleLeaveRoom}
+            className="flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact bg-[#FF453A] hover:bg-[#E03E34]"
+            title="Leave meeting"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5z" /></svg>
+          </button>
+        </div>
       </div>
     </div>
   );

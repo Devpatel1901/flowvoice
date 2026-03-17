@@ -1,8 +1,8 @@
 const STATUS_CONFIG = {
-  idle: { label: "Idle", color: "bg-gray-500" },
-  listening: { label: "Listening", color: "bg-green-500" },
-  processing: { label: "Processing", color: "bg-yellow-500" },
-  speaking: { label: "Speaking", color: "bg-blue-500" },
+  idle: { label: "Idle", color: "#A1A1AA" },
+  listening: { label: "Listening", color: "#34D399" },
+  processing: { label: "Processing", color: "#4F9CF9" },
+  speaking: { label: "Speaking", color: "#4F9CF9" },
 };
 
 export default function StatusIndicator({ status }) {
@@ -10,8 +10,13 @@ export default function StatusIndicator({ status }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`inline-block h-3 w-3 rounded-full ${color} animate-pulse`} />
-      <span className="text-sm font-medium text-gray-300">{label}</span>
+      <span
+        className="inline-block h-3 w-3 rounded-full animate-pulse"
+        style={{ background: color }}
+      />
+      <span className="text-sm font-medium" style={{ color: "#A1A1AA" }}>
+        {label}
+      </span>
     </div>
   );
 }

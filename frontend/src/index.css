@@ -1,1 +1,72 @@
 @import "tailwindcss";
+
+:root {
+  --bg: #0B0B0F;
+  --bg-secondary: #111116;
+  --card: #1C1C22;
+  --glass: rgba(28, 28, 34, 0.75);
+  --border: #2A2A32;
+  --primary: #4F9CF9;
+  --primary-hover: #3B82F6;
+  --success: #34D399;
+  --danger: #FF453A;
+  --danger-hover: #E03E34;
+  --text: #F5F5F7;
+  --text-muted: #A1A1AA;
+  --text-secondary: #D1D5DB;
+}
+
+* {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+@keyframes speak-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.95; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); }
+  50% { box-shadow: 0 0 28px rgba(52, 211, 153, 0.6); }
+}
+
+@keyframes record-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-speak-pulse {
+  animation: speak-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-record-pulse {
+  animation: record-pulse 1s ease-in-out infinite;
+}
+
+.card-premium {
+  background: linear-gradient(180deg, #1C1C22, #15151B);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.btn-interact:hover {
+  transform: translateY(-1px);
+}
+
+.btn-interact:active {
+  transform: scale(0.97);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}

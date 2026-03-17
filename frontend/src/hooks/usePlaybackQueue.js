@@ -15,10 +15,15 @@ export default function usePlaybackQueue(onPlaybackStart, onPlaybackEnd) {
 
   const warmup = useCallback(() => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.warn("Could not create AudioContext:", e);
+        return;
+      }
     }
-    if (audioCtxRef.current.state === "suspended") {
-      audioCtxRef.current.resume();
+    if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume().catch(e => console.warn("Could not resume AudioContext:", e));
     }
   }, []);
 

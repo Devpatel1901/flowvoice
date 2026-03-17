@@ -1,4 +1,4 @@
-# FlowVoice
+# UnStutterAI
 
 Real-time AI speech accessibility companion. Streams microphone audio through OpenAI's Realtime API for transcription, cleans up disfluencies with GPT-4o-mini, and speaks the cleaned text back via OpenAI TTS.
 

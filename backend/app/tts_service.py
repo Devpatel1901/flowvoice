@@ -1,36 +1,21 @@
-import asyncio
 import logging
 
-from openai import AsyncOpenAI
-
-from .config import OPENAI_API_KEY, OPENAI_TIMEOUT, TTS_MODEL, TTS_VOICE
+from .config import ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+from .elevenlabs_service import synthesize_with_voice
 
 logger = logging.getLogger(__name__)
 
-_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
-
-async def synthesize(text: str) -> bytes | None:
-    """Synthesize speech from text using OpenAI TTS. Returns MP3 bytes or None on failure."""
+async def synthesize(text: str, voice_id: str | None = None) -> bytes | None:
+    """Synthesize speech from text using ElevenLabs TTS. Returns MP3 bytes or None on failure.
+    Uses voice_id if provided, otherwise ELEVENLABS_VOICE_ID from config."""
     if not text.strip():
         return None
-    try:
-        response = await asyncio.wait_for(
-            _client.audio.speech.create(
-                model=TTS_MODEL,
-                voice=TTS_VOICE,
-                input=text,
-                instructions="Speak clearly and naturally at a moderate pace. Enunciate each word precisely.",
-                response_format="mp3",
-            ),
-            timeout=OPENAI_TIMEOUT,
-        )
-        audio_bytes = response.content
-        logger.info("TTS: synthesized %d bytes for '%s'", len(audio_bytes), text[:60])
-        return audio_bytes
-    except asyncio.TimeoutError:
-        logger.error("TTS: timeout after %ds", OPENAI_TIMEOUT)
+    if not ELEVENLABS_API_KEY:
+        logger.error("TTS: ELEVENLABS_API_KEY is not configured")
         return None
-    except Exception as e:
-        logger.error("TTS: failed: %s", e)
+    effective_voice = voice_id or ELEVENLABS_VOICE_ID
+    if not effective_voice:
+        logger.error("TTS: No voice_id provided and ELEVENLABS_VOICE_ID is not configured")
         return None
+    return await synthesize_with_voice(text, effective_voice)

@@ -25,6 +25,7 @@ class Room:
     room_id: str
     stutter_ws: WebSocket | None = None
     listener_ws: WebSocket | None = None
+    voice_id: str | None = None
     vad: VADTracker = field(default_factory=VADTracker)
     listener_queue: PlaybackQueue = field(default_factory=PlaybackQueue)
     held_audio: list[tuple[float, bytes]] = field(default_factory=list)
@@ -44,35 +45,47 @@ class RoomManager:
     def get(self, room_id: str) -> Room | None:
         return self._rooms.get(room_id)
 
-    async def join(self, room_id: str, role: str, ws: WebSocket) -> Room:
+    async def join(self, room_id: str, role: str, ws: WebSocket, voice_id: str | None = None) -> Room:
         room = self.get_or_create(room_id)
         async with room._lock:
             if role == "stutter":
                 if room.stutter_ws is not None:
-                    raise ValueError(f"Stutter role already taken in room {room_id}")
+                    try:
+                        await room.stutter_ws.close()
+                    except Exception:
+                        pass
+                    logger.warning(f"Evicted stale Stutter user in room {room_id}")
                 room.stutter_ws = ws
+                room.voice_id = voice_id
             elif role == "listener":
                 if room.listener_ws is not None:
-                    raise ValueError(f"Listener role already taken in room {room_id}")
+                    try:
+                        await room.listener_ws.close()
+                    except Exception:
+                        pass
+                    logger.warning(f"Evicted stale Listener user in room {room_id}")
                 room.listener_ws = ws
             else:
                 raise ValueError(f"Unknown role: {role}")
         logger.info("Room %s: %s joined", room_id, role)
         return room
 
-    def leave(self, room_id: str, role: str) -> None:
+    async def leave(self, room_id: str, role: str, ws: WebSocket) -> None:
         room = self._rooms.get(room_id)
         if not room:
             return
-        if role == "stutter":
-            room.stutter_ws = None
-        elif role == "listener":
-            room.listener_ws = None
-        if room.stutter_ws is None and room.listener_ws is None:
-            del self._rooms[room_id]
-            logger.info("Room %s destroyed (empty)", room_id)
-        else:
-            logger.info("Room %s: %s left", room_id, role)
+        
+        async with room._lock:
+            if role == "stutter" and room.stutter_ws is ws:
+                room.stutter_ws = None
+            elif role == "listener" and room.listener_ws is ws:
+                room.listener_ws = None
+                
+            if room.stutter_ws is None and room.listener_ws is None:
+                del self._rooms[room_id]
+                logger.info("Room %s destroyed (empty)", room_id)
+            else:
+                logger.info("Room %s: %s left", room_id, role)
 
     def room_status(self, room_id: str) -> dict:
         room = self._rooms.get(room_id)

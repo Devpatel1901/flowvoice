@@ -1,5 +1,6 @@
 backend/.venv
 backend/.env
+backend/app/voices.json
 __pycache__/
 
 frontend/node_modules

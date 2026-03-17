@@ -1,7 +1,7 @@
 [project]
-name = "flowvoice-backend"
+name = "unstutterai-backend"
 version = "0.1.0"
-description = "FlowVoice - Real-time AI speech accessibility companion"
+description = "UnStutterAI - Real-time AI speech accessibility companion"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
