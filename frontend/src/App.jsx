@@ -5,6 +5,7 @@ import usePlaybackQueue from "./hooks/usePlaybackQueue";
 import usePCMPlayback from "./hooks/usePCMPlayback";
 import StatusIndicator from "./components/StatusIndicator";
 import TranscriptDisplay from "./components/TranscriptDisplay";
+import ParticipantCard from "./components/ParticipantCard";
 import RoomJoin from "./components/RoomJoin";
 import VoiceClonePage from "./pages/VoiceClonePage";
 
@@ -312,164 +313,160 @@ export default function App() {
   const roleLabel =
     role === "stutter" ? "Stutter User" : role === "listener" ? "Listener" : "";
 
+  const isStutterSpeaking =
+    (role === "stutter" && !isMuted) || (role === "listener" && status === "speaking");
+  const isListenerSpeaking =
+    (role === "listener" && !isMuted) || (role === "stutter" && status === "speaking");
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">StutterAI</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Real-time AI speech accessibility companion
-          </p>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+      {/* Compact header */}
+      <header className="shrink-0 px-4 py-4 border-b border-gray-800">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">StutterAI</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Real-time speech accessibility</p>
+          </div>
           {isRoom && (
-            <div className="mt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
-              <span>
-                Room: <span className="text-gray-300 font-mono">{roomId}</span>
-              </span>
-              <span className="text-gray-700">|</span>
-              <span>
-                Role:{" "}
-                <span
-                  className={
-                    role === "stutter" ? "text-emerald-400" : "text-blue-400"
-                  }
-                >
-                  {roleLabel}
-                </span>
-              </span>
-              <span className="text-gray-700">|</span>
-              <span>
-                Partner:{" "}
-                <span
-                  className={
-                    peerConnected ? "text-emerald-400" : "text-gray-500"
-                  }
-                >
-                  {peerConnected ? "Connected" : "Waiting..."}
-                </span>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+              <span>Room: <span className="text-gray-300 font-mono">{roomId}</span></span>
+              <span className="text-gray-700">·</span>
+              <span className={role === "stutter" ? "text-emerald-400" : "text-blue-400"}>{roleLabel}</span>
+              <span className="text-gray-700">·</span>
+              <span className={peerConnected ? "text-emerald-400" : "text-gray-500"}>
+                {peerConnected ? "Partner connected" : "Waiting..."}
               </span>
             </div>
           )}
-        </header>
-
-        {/* Controls bar */}
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleToggleMute}
-              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
-                isMuted
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
-              }`}
-            >
-              {isMuted ? (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                  <span>Unmute Mic</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                  <span>Mute Mic</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleToggleSpeaker}
-              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
-                isSpeakerMuted
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
-            >
-              {isSpeakerMuted ? (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.657 6.343a8 8 0 010 11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15l-4.5-5.5z" /><line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                  <span>Unmute Speaker</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.121-2.121a8 8 0 000-11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15L5.8 15z" /></svg>
-                  <span>Mute Speaker</span>
-                </>
-              )}
-            </button>
-            <StatusIndicator status={status} />
-          </div>
-
-          <div className="flex items-center gap-4">
-            {latency !== null && (
-              <span className="text-xs text-gray-500">{latency}ms</span>
-            )}
-
-            {/* Assist toggle only in solo mode */}
-            {!isRoom && (
-              <label className="flex cursor-pointer items-center gap-2">
-                <span className="text-sm text-gray-400">Assist</span>
-                <div
-                  className={`relative h-6 w-11 rounded-full transition-colors ${
-                    assistMode ? "bg-emerald-600" : "bg-gray-600"
-                  }`}
-                  onClick={() => {
-                    const next = !assistMode;
-                    setAssistMode(next);
-                    sendJson({ type: "assist_toggle", enabled: next });
-                  }}
-                >
-                  <div
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                      assistMode ? "translate-x-5" : "translate-x-0.5"
-                    }`}
-                  />
-                </div>
-              </label>
-            )}
-
-            <button
-              onClick={handleLeaveRoom}
-              className="rounded-md border border-gray-600 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 transition-colors"
-            >
-              Leave
-            </button>
-          </div>
         </div>
+      </header>
 
-        {joinError && (
-          <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 px-4 py-2 text-sm text-red-300">
-            {joinError}
-          </div>
-        )}
+      {/* Alerts */}
+      {joinError && (
+        <div className="mx-4 mt-2 rounded-lg border border-red-700 bg-red-900/30 px-4 py-2 text-sm text-red-300">
+          {joinError}
+        </div>
+      )}
+      {!connected && (
+        <div className="mx-4 mt-2 rounded-lg border border-yellow-700 bg-yellow-900/30 px-4 py-2 text-sm text-yellow-300">
+          Connecting to server...
+        </div>
+      )}
+      {isRoom && !peerConnected && !joinError && (
+        <div className="mx-4 mt-2 rounded-lg border border-blue-700 bg-blue-900/30 px-4 py-2 text-sm text-blue-300">
+          Waiting for your partner to join room <span className="font-mono font-semibold">{roomId}</span>...
+        </div>
+      )}
 
-        {!connected && (
-          <div className="mb-4 rounded-lg border border-yellow-700 bg-yellow-900/30 px-4 py-2 text-sm text-yellow-300">
-            Connecting to server...
-          </div>
-        )}
+      {/* Main: participant grid + transcript side panel */}
+      <main className="flex-1 flex flex-col lg:flex-row gap-4 p-4 max-w-6xl w-full mx-auto overflow-auto">
+        <section className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 content-start min-h-0">
+          <ParticipantCard
+            label="Stutter User"
+            isSpeaking={isStutterSpeaking}
+            isYou={role === "stutter"}
+          />
+          <ParticipantCard
+            label={isRoom ? "Listener" : "Assistant"}
+            isSpeaking={isListenerSpeaking}
+            isYou={role === "listener"}
+          />
+        </section>
+        <aside className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col min-h-0">
+          <TranscriptDisplay entries={cleanedEntries} />
+        </aside>
+      </main>
 
-        {isRoom && !peerConnected && !joinError && (
-          <div className="mb-4 rounded-lg border border-blue-700 bg-blue-900/30 px-4 py-2 text-sm text-blue-300">
-            Waiting for your partner to join room{" "}
-            <span className="font-mono font-semibold">{roomId}</span>...
-          </div>
-        )}
+      {/* Role description (room only) */}
+      {isRoom && (
+        <div className="shrink-0 px-4 pb-2 max-w-6xl mx-auto w-full">
+          <p className="text-xs text-gray-500 text-center">
+            {role === "stutter"
+              ? "Your speech is processed and sent as clean audio to your partner."
+              : "You hear your partner's cleaned speech. Your voice is relayed to them."}
+          </p>
+        </div>
+      )}
 
-        <TranscriptDisplay entries={cleanedEntries} />
-
-        {isRoom && (
-          <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800/30 px-4 py-3 text-xs text-gray-500">
-            {role === "stutter" ? (
-              <p>
-                Your speech is processed and sent as clean audio to your partner.
-                You will hear your partner&apos;s voice directly.
-              </p>
+      {/* Bottom meeting control bar */}
+      <div className="shrink-0 border-t border-gray-800 bg-gray-900/95 backdrop-blur py-4 px-4">
+        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={handleToggleMute}
+            className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${
+              isMuted
+                ? "bg-gray-700 hover:bg-gray-600 text-white"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white"
+            }`}
+            title={isMuted ? "Unmute microphone" : "Mute microphone"}
+          >
+            {isMuted ? (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" strokeLinecap="round" /></svg>
+                <span>Unmute</span>
+              </>
             ) : (
-              <p>
-                You will hear your partner&apos;s cleaned speech.
-                Your voice is relayed directly to your partner.
-              </p>
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                <span>Mute</span>
+              </>
             )}
-          </div>
-        )}
+          </button>
+          <button
+            onClick={handleToggleSpeaker}
+            className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${
+              isSpeakerMuted
+                ? "bg-gray-700 hover:bg-gray-600 text-white"
+                : "bg-blue-600 hover:bg-blue-500 text-white"
+            }`}
+            title={isSpeakerMuted ? "Unmute speaker" : "Mute speaker"}
+          >
+            {isSpeakerMuted ? (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.657 6.343a8 8 0 010 11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15l-4.5-5.5z" /><line x1="2" y1="2" x2="22" y2="22" strokeWidth="2" strokeLinecap="round" /></svg>
+                <span>Speaker off</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.121-2.121a8 8 0 000-11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15L5.8 15z" /></svg>
+                <span>Speaker on</span>
+              </>
+            )}
+          </button>
+          <StatusIndicator status={status} />
+          {latency !== null && (
+            <span className="text-xs text-gray-500 px-2">{latency}ms</span>
+          )}
+          {!isRoom && (
+            <label className="flex cursor-pointer items-center gap-2 rounded-full bg-gray-800 px-4 py-2">
+              <span className="text-sm text-gray-400">Assist</span>
+              <div
+                className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
+                  assistMode ? "bg-emerald-600" : "bg-gray-600"
+                }`}
+                onClick={() => {
+                  const next = !assistMode;
+                  setAssistMode(next);
+                  sendJson({ type: "assist_toggle", enabled: next });
+                }}
+              >
+                <div
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                    assistMode ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </label>
+          )}
+          <button
+            onClick={handleLeaveRoom}
+            className="flex items-center gap-2 rounded-full bg-red-600 hover:bg-red-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:scale-105 active:scale-95"
+            title="Leave meeting"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5z" /></svg>
+            <span>Leave</span>
+          </button>
+        </div>
       </div>
     </div>
   );

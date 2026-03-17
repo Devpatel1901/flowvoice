@@ -105,36 +105,36 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
   }, [onProceed]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="w-full max-w-md px-4">
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight">StutterAI</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-gray-400">
             Clone your voice for personalized speech output
           </p>
         </header>
 
-        <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-center">Voice Clone</h2>
+        <div className="rounded-2xl border border-gray-700 bg-gray-800/60 shadow-xl p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-center text-gray-100">Voice Clone</h2>
           <p className="text-sm text-gray-400 text-center">
             Record 30–60 seconds of your voice. The assistant will use it to speak in your style. Room:{" "}
             <span className="font-mono text-gray-300">{roomId}</span>
           </p>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Name (optional)</label>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Name (optional)</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="session"
-              className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-gray-600 bg-gray-700/80 px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm text-gray-400">Read these sentences aloud:</label>
-            <ol className="list-decimal list-inside space-y-3 text-sm text-gray-300">
+            <label className="block text-sm font-medium text-gray-400">Read these sentences aloud</label>
+            <ol className="list-decimal list-inside space-y-3 text-sm text-gray-300 pl-1">
               {SENTENCES.map((s, i) => (
                 <li key={i}>{s.replace("{name}", displayName)}</li>
               ))}
@@ -142,10 +142,10 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
           </div>
 
           {isRecording ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span>Recording... {duration}s</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="font-medium">Recording... {duration}s</span>
               </div>
               <p className="text-xs text-gray-500 text-center">
                 {duration < 30 ? `Record at least ${30 - duration} more seconds` : "You can stop now (30–60 sec recommended)"}
@@ -153,20 +153,20 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
               <button
                 onClick={stopRecording}
                 disabled={duration < 30}
-                className="w-full rounded-md px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Stop Recording
               </button>
             </div>
           ) : duration > 0 && chunksRef.current.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm text-gray-400 text-center">
                 Recorded {duration}s. Ready to clone.
               </p>
               <button
                 onClick={handleUpload}
                 disabled={loading}
-                className="w-full rounded-md px-4 py-2.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20"
               >
                 {loading ? "Cloning..." : "Clone Voice & Join Room"}
               </button>
@@ -177,7 +177,7 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
                   startRecording();
                 }}
                 disabled={loading}
-                className="w-full rounded-md px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 transition-colors"
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/60 transition-colors border border-gray-600"
               >
                 Record Again
               </button>
@@ -185,14 +185,14 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
           ) : (
             <button
               onClick={startRecording}
-              className="w-full rounded-md px-4 py-2.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 transition-colors"
+              className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-500/20"
             >
               Start Recording
             </button>
           )}
 
           {error && (
-            <div className="rounded-md bg-red-900/30 border border-red-700 px-3 py-2 text-sm text-red-300">
+            <div className="rounded-xl bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
               {error}
             </div>
           )}
@@ -204,7 +204,7 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
             <div className="relative flex justify-center">
               <button
                 onClick={handleSkip}
-                className="rounded-md border border-gray-600 px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 transition-colors"
+                className="rounded-xl border border-gray-600 bg-gray-700/40 px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/60 transition-colors"
               >
                 Skip & use default voice
               </button>
@@ -214,7 +214,7 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
 
         <button
           onClick={onBack}
-          className="mt-4 w-full rounded-md border border-gray-600 px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 transition-colors"
+          className="mt-4 w-full rounded-xl border border-gray-600 bg-gray-800/40 px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-700/60 transition-colors"
         >
           Back to room selection
         </button>
