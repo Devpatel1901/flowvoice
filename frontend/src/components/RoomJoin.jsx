@@ -47,7 +47,7 @@ export default function RoomJoin({ onJoin, onSoloMode }) {
       <div className="w-full max-w-md">
         <header className="mb-8 text-center">
           <h1 className="font-bold tracking-tight" style={{ fontSize: 40, color: "#F5F5F7" }}>
-            StutterAI
+            UnStutterAI
           </h1>
           <p className="mt-3 text-sm" style={{ color: "#A1A1AA" }}>
             Real-time AI speech accessibility companion

@@ -330,7 +330,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#F5F5F7" }}>
-              StutterAI
+              UnStutterAI
             </h1>
             <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>
               Real-time speech accessibility
