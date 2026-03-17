@@ -101,29 +101,29 @@ Below is a backend-focused diagram emphasizing the meeting pipeline and frontend
 
 ```mermaid
 flowchart TB
-  subgraph Frontend[Frontend - Browser]
-    Mic[Mic AudioWorklet 24kHz PCM]
-    WsClient[WebSocket Client]
-    UI[Meeting UI + Controls]
-    Player[Playback Queue (MP3) + PCM Playback]
+  subgraph Frontend["Frontend - Browser"]
+    Mic["Mic AudioWorklet 24kHz PCM"]
+    WsClient["WebSocket Client"]
+    UI["Meeting UI + Controls"]
+    Player["Playback Queue (MP3) + PCM Playback"]
   end
 
-  subgraph Backend[Backend - FastAPI]
-    WsSolo[/ws/audio (solo)/]
-    WsRoom[/ws/room/{room_id}/{role} (meeting)/]
-    RoomMgr[RoomManager\njoin/leave + role status]
-    VAD[VADTracker (listener speaking detection)]
-    Hold[Held TTS buffer + interrupt/flush]
+  subgraph Backend["Backend - FastAPI"]
+    WsSolo["/ws/audio (solo)"]
+    WsRoom["/ws/room/{room_id}/{role} (meeting)"]
+    RoomMgr["RoomManager: join/leave + role status"]
+    VAD["VADTracker (listener speaking detection)"]
+    Hold["Held TTS buffer + interrupt/flush"]
   end
 
-  subgraph OpenAI[OpenAI]
-    ASR[Realtime ASR\n(gpt-4o-mini-transcribe)]
-    Clean[Cleanup\n(GPT-4o-mini)]
+  subgraph OpenAI["OpenAI"]
+    ASR["Realtime ASR (gpt-4o-mini-transcribe)"]
+    Clean["Cleanup (GPT-4o-mini)"]
   end
 
-  subgraph ElevenLabs[ElevenLabs]
-    Clone[Voice Clone\n(voices/add)]
-    TTS[TTS\n(eleven_multilingual_v2)]
+  subgraph ElevenLabs["ElevenLabs"]
+    Clone["Voice Clone (voices/add)"]
+    TTS["TTS (eleven_multilingual_v2)"]
   end
 
   Mic --> WsClient --> WsRoom
@@ -139,7 +139,7 @@ flowchart TB
   WsRoom -->|Listener PCM relayed prefixed 0x02| WsClient --> Player
 
   %% Voice clone control path
-  UI -->|POST /api/clone (webm/mp3)| Backend --> Clone
+  UI -->|POST /api/clone (webm/mp3)| Clone
   Clone -->|voice_id| RoomMgr
 ```
 
