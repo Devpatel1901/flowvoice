@@ -8,22 +8,47 @@ export default function TranscriptDisplay({ entries }) {
   }, [entries]);
 
   return (
-    <div className="flex flex-col rounded-xl border border-gray-700 bg-gray-800/80 shadow-lg overflow-hidden">
-      <div className="border-b border-gray-700 px-4 py-3 bg-gray-800">
-        <h3 className="text-sm font-semibold text-emerald-400">Live transcript</h3>
-        <p className="text-xs text-gray-500 mt-0.5">Cleaned speech</p>
+    <div
+      className="flex flex-col overflow-hidden rounded-[20px] border border-[#2A2A32] shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+      style={{
+        background: "linear-gradient(180deg, #1C1C22, #15151B)",
+      }}
+    >
+      <div className="border-b border-[#2A2A32] px-4 py-3 bg-[#111116]/80">
+        <h3 className="text-lg font-semibold" style={{ color: "#4F9CF9" }}>
+          Live transcript
+        </h3>
+        <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>
+          Cleaned speech
+        </p>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[280px] min-h-[120px] md:max-h-[360px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2.5 max-h-[280px] min-h-[120px] md:max-h-[360px]">
         {entries.length === 0 && (
-          <p className="text-sm text-gray-500 italic py-4">No transcripts yet...</p>
+          <p
+            className="text-sm italic py-6 text-center"
+            style={{ color: "#A1A1AA" }}
+          >
+            Waiting for speech. Your conversation will appear here.
+          </p>
         )}
         {entries.map((entry, i) => (
           <div
             key={i}
-            className="flex gap-3 text-sm text-gray-200 leading-relaxed pl-3 border-l-2 border-emerald-500/50"
+            className="rounded-xl px-4 py-3 border-l-[3px] border-[#34D399]"
+            style={{
+              background: "#1C1C22",
+              marginBottom: 10,
+            }}
           >
-            <span className="shrink-0 text-gray-500 text-xs font-medium w-8">{i + 1}</span>
-            <p className="flex-1">{entry}</p>
+            <span
+              className="text-xs font-medium block mb-1"
+              style={{ color: "#34D399" }}
+            >
+              Cleaned speech
+            </span>
+            <p className="text-sm leading-relaxed" style={{ color: "#F5F5F7" }}>
+              {entry}
+            </p>
           </div>
         ))}
         <div ref={bottomRef} />

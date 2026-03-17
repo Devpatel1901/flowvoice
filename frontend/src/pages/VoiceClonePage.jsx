@@ -105,68 +105,94 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
   }, [onProceed]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{
+        background: "radial-gradient(circle at top, #1C1C22 0%, #0B0B0F 60%)",
+      }}
+    >
       <div className="w-full max-w-md">
         <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">StutterAI</h1>
-          <p className="mt-2 text-sm text-gray-400">
+          <h1 className="font-bold tracking-tight" style={{ fontSize: 40, color: "#F5F5F7" }}>
+            StutterAI
+          </h1>
+          <p className="mt-3 text-sm" style={{ color: "#A1A1AA" }}>
             Clone your voice for personalized speech output
           </p>
         </header>
 
-        <div className="rounded-2xl border border-gray-700 bg-gray-800/60 shadow-xl p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-center text-gray-100">Voice Clone</h2>
-          <p className="text-sm text-gray-400 text-center">
+        <div
+          className="rounded-[20px] border border-[#2A2A32] shadow-[0_10px_30px_rgba(0,0,0,0.6)] p-6"
+          style={{
+            background: "linear-gradient(180deg, #1C1C22, #15151B)",
+          }}
+        >
+          <h2 className="text-center font-semibold mb-2" style={{ fontSize: 22, color: "#F5F5F7" }}>
+            Voice Clone
+          </h2>
+          <p className="text-sm text-center mb-6" style={{ color: "#A1A1AA" }}>
             Record 30–60 seconds of your voice. The assistant will use it to speak in your style. Room:{" "}
-            <span className="font-mono text-gray-300">{roomId}</span>
+            <span className="font-mono" style={{ color: "#D1D5DB" }}>{roomId}</span>
           </p>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Name (optional)</label>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#A1A1AA" }}>
+              Name (optional)
+            </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="session"
-              className="w-full rounded-xl border border-gray-600 bg-gray-700/80 px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-full rounded-xl border border-[#2A2A32] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F9CF9] transition-all"
+              style={{ background: "#111116", color: "#F5F5F7" }}
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-400">Read these sentences aloud</label>
-            <ol className="list-decimal list-inside space-y-3 text-sm text-gray-300 pl-1">
-              {SENTENCES.map((s, i) => (
-                <li key={i}>{s.replace("{name}", displayName)}</li>
-              ))}
-            </ol>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#A1A1AA" }}>
+              Read these sentences aloud
+            </label>
+            <div
+              className="rounded-xl border border-[#2A2A32] p-4"
+              style={{ background: "#111116" }}
+            >
+              <ol className="list-decimal list-inside space-y-3 text-sm pl-1" style={{ color: "#D1D5DB" }}>
+                {SENTENCES.map((s, i) => (
+                  <li key={i}>{s.replace("{name}", displayName)}</li>
+                ))}
+              </ol>
+            </div>
           </div>
 
           {isRecording ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-center gap-2 text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              <div className="flex items-center justify-center gap-2" style={{ color: "#34D399" }}>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF453A] animate-record-pulse" />
                 <span className="font-medium">Recording... {duration}s</span>
               </div>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-center" style={{ color: "#A1A1AA" }}>
                 {duration < 30 ? `Record at least ${30 - duration} more seconds` : "You can stop now (30–60 sec recommended)"}
               </p>
               <button
                 onClick={stopRecording}
                 disabled={duration < 30}
-                className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full rounded-xl h-12 text-sm font-semibold transition-all btn-interact disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                style={{ background: "#FF453A", color: "#fff" }}
               >
                 Stop Recording
               </button>
             </div>
           ) : duration > 0 && chunksRef.current.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-sm text-gray-400 text-center">
+              <p className="text-sm text-center" style={{ color: "#A1A1AA" }}>
                 Recorded {duration}s. Ready to clone.
               </p>
               <button
                 onClick={handleUpload}
                 disabled={loading}
-                className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20"
+                className="w-full rounded-xl h-12 text-sm font-semibold transition-all btn-interact disabled:opacity-50"
+                style={{ background: "#34D399", color: "#0B0B0F" }}
               >
                 {loading ? "Cloning..." : "Clone Voice & Join Room"}
               </button>
@@ -177,7 +203,8 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
                   startRecording();
                 }}
                 disabled={loading}
-                className="w-full rounded-xl px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/60 transition-colors border border-gray-600"
+                className="w-full rounded-xl h-12 border border-[#2A2A32] text-sm transition-all btn-interact"
+                style={{ background: "#111116", color: "#A1A1AA" }}
               >
                 Record Again
               </button>
@@ -185,26 +212,31 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
           ) : (
             <button
               onClick={startRecording}
-              className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-500/20"
+              className="w-full rounded-xl h-12 text-sm font-semibold transition-all btn-interact"
+              style={{ background: "#34D399", color: "#0B0B0F" }}
             >
               Start Recording
             </button>
           )}
 
           {error && (
-            <div className="rounded-xl bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
+            <div
+              className="rounded-xl border border-[#FF453A] px-4 py-3 text-sm mt-4"
+              style={{ background: "rgba(255,69,58,0.1)", color: "#FF453A" }}
+            >
               {error}
             </div>
           )}
 
-          <div className="relative pt-2">
+          <div className="relative pt-4 mt-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700" />
+              <div className="w-full border-t border-[#2A2A32]" />
             </div>
             <div className="relative flex justify-center">
               <button
                 onClick={handleSkip}
-                className="rounded-xl border border-gray-600 bg-gray-700/40 px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/60 transition-colors"
+                className="rounded-xl border border-[#2A2A32] px-4 py-2.5 text-sm transition-all btn-interact"
+                style={{ background: "#111116", color: "#A1A1AA" }}
               >
                 Skip & use default voice
               </button>
@@ -214,7 +246,8 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
 
         <button
           onClick={onBack}
-          className="mt-4 w-full rounded-xl border border-gray-600 bg-gray-800/40 px-4 py-3 text-sm font-medium text-gray-400 hover:bg-gray-700/60 transition-colors"
+          className="mt-6 w-full rounded-xl h-12 border border-[#2A2A32] text-sm font-medium transition-all btn-interact"
+          style={{ background: "rgba(28,28,34,0.6)", color: "#A1A1AA" }}
         >
           Back to room selection
         </button>

@@ -319,21 +319,30 @@ export default function App() {
     (role === "listener" && !isMuted) || (role === "stutter" && status === "speaking");
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div
+      className="min-h-screen text-white flex flex-col"
+      style={{
+        background: "radial-gradient(circle at top, #1C1C22 0%, #0B0B0F 60%)",
+      }}
+    >
       {/* Compact header */}
-      <header className="shrink-0 px-4 py-4 border-b border-gray-800">
+      <header className="shrink-0 px-6 py-4 border-b border-[#2A2A32] bg-[#0B0B0F]/80 backdrop-blur-[10px]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">StutterAI</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Real-time speech accessibility</p>
+            <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#F5F5F7" }}>
+              StutterAI
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>
+              Real-time speech accessibility
+            </p>
           </div>
           {isRoom && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-              <span>Room: <span className="text-gray-300 font-mono">{roomId}</span></span>
-              <span className="text-gray-700">·</span>
-              <span className={role === "stutter" ? "text-emerald-400" : "text-blue-400"}>{roleLabel}</span>
-              <span className="text-gray-700">·</span>
-              <span className={peerConnected ? "text-emerald-400" : "text-gray-500"}>
+            <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "#A1A1AA" }}>
+              <span>Room: <span className="font-mono" style={{ color: "#D1D5DB" }}>{roomId}</span></span>
+              <span style={{ color: "#2A2A32" }}>·</span>
+              <span style={{ color: role === "stutter" ? "#34D399" : "#4F9CF9" }}>{roleLabel}</span>
+              <span style={{ color: "#2A2A32" }}>·</span>
+              <span style={{ color: peerConnected ? "#34D399" : "#A1A1AA" }}>
                 {peerConnected ? "Partner connected" : "Waiting..."}
               </span>
             </div>
@@ -343,17 +352,17 @@ export default function App() {
 
       {/* Alerts */}
       {joinError && (
-        <div className="mx-4 mt-2 rounded-lg border border-red-700 bg-red-900/30 px-4 py-2 text-sm text-red-300">
+        <div className="mx-4 mt-3 rounded-xl border border-[#FF453A] px-4 py-3 text-sm" style={{ background: "rgba(255,69,58,0.1)", color: "#FF453A" }}>
           {joinError}
         </div>
       )}
       {!connected && (
-        <div className="mx-4 mt-2 rounded-lg border border-yellow-700 bg-yellow-900/30 px-4 py-2 text-sm text-yellow-300">
+        <div className="mx-4 mt-3 rounded-xl border border-[#4F9CF9] px-4 py-3 text-sm" style={{ background: "rgba(79,156,249,0.1)", color: "#4F9CF9" }}>
           Connecting to server...
         </div>
       )}
       {isRoom && !peerConnected && !joinError && (
-        <div className="mx-4 mt-2 rounded-lg border border-blue-700 bg-blue-900/30 px-4 py-2 text-sm text-blue-300">
+        <div className="mx-4 mt-3 rounded-xl border border-[#4F9CF9] px-4 py-3 text-sm" style={{ background: "rgba(79,156,249,0.1)", color: "#4F9CF9" }}>
           Waiting for your partner to join room <span className="font-mono font-semibold">{roomId}</span>...
         </div>
       )}
@@ -379,8 +388,8 @@ export default function App() {
 
       {/* Role description (room only) */}
       {isRoom && (
-        <div className="shrink-0 px-4 pb-2 max-w-6xl mx-auto w-full">
-          <p className="text-xs text-gray-500 text-center">
+        <div className="shrink-0 px-4 pb-3 max-w-6xl mx-auto w-full">
+          <p className="text-xs text-center" style={{ color: "#A1A1AA" }}>
             {role === "stutter"
               ? "Your speech is processed and sent as clean audio to your partner."
               : "You hear your partner's cleaned speech. Your voice is relayed to them."}
@@ -389,61 +398,51 @@ export default function App() {
       )}
 
       {/* Bottom meeting control bar */}
-      <div className="shrink-0 border-t border-gray-800 bg-gray-900/95 backdrop-blur py-4 px-4">
-        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-3">
+      <div
+        className="shrink-0 border-t border-[#2A2A32] py-4 px-4 backdrop-blur-[10px]"
+        style={{ background: "rgba(11,11,15,0.8)" }}
+      >
+        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-4">
           <button
             onClick={handleToggleMute}
-            className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${
-              isMuted
-                ? "bg-gray-700 hover:bg-gray-600 text-white"
-                : "bg-emerald-600 hover:bg-emerald-500 text-white"
-            }`}
+            className="flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact"
+            style={{
+              background: isMuted ? "#FF453A" : "#1C1C22",
+            }}
             title={isMuted ? "Unmute microphone" : "Mute microphone"}
           >
             {isMuted ? (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" strokeLinecap="round" /></svg>
-                <span>Unmute</span>
-              </>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /><line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" strokeLinecap="round" /></svg>
             ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                <span>Mute</span>
-              </>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
             )}
           </button>
           <button
             onClick={handleToggleSpeaker}
-            className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${
-              isSpeakerMuted
-                ? "bg-gray-700 hover:bg-gray-600 text-white"
-                : "bg-blue-600 hover:bg-blue-500 text-white"
+            className={`flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact ${
+              !isSpeakerMuted ? "bg-[#4F9CF9] hover:bg-[#3B82F6]" : ""
             }`}
+            style={isSpeakerMuted ? { background: "#1C1C22" } : undefined}
             title={isSpeakerMuted ? "Unmute speaker" : "Mute speaker"}
           >
             {isSpeakerMuted ? (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.657 6.343a8 8 0 010 11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15l-4.5-5.5z" /><line x1="2" y1="2" x2="22" y2="22" strokeWidth="2" strokeLinecap="round" /></svg>
-                <span>Speaker off</span>
-              </>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.657 6.343a8 8 0 010 11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15l-4.5-5.5z" /><line x1="2" y1="2" x2="22" y2="22" strokeWidth="2" strokeLinecap="round" /></svg>
             ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.121-2.121a8 8 0 000-11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15L5.8 15z" /></svg>
-                <span>Speaker on</span>
-              </>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.121-2.121a8 8 0 000-11.314M5.8 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.8l4.5-5.5v15L5.8 15z" /></svg>
             )}
           </button>
           <StatusIndicator status={status} />
           {latency !== null && (
-            <span className="text-xs text-gray-500 px-2">{latency}ms</span>
+            <span className="text-xs px-2" style={{ color: "#A1A1AA" }}>{latency}ms</span>
           )}
           {!isRoom && (
-            <label className="flex cursor-pointer items-center gap-2 rounded-full bg-gray-800 px-4 py-2">
-              <span className="text-sm text-gray-400">Assist</span>
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 transition-all btn-interact" style={{ background: "#1C1C22", border: "1px solid #2A2A32" }}>
+              <span className="text-sm" style={{ color: "#A1A1AA" }}>Assist</span>
               <div
                 className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
-                  assistMode ? "bg-emerald-600" : "bg-gray-600"
+                  assistMode ? "" : "opacity-60"
                 }`}
+                style={{ background: assistMode ? "#34D399" : "#2A2A32" }}
                 onClick={() => {
                   const next = !assistMode;
                   setAssistMode(next);
@@ -460,11 +459,10 @@ export default function App() {
           )}
           <button
             onClick={handleLeaveRoom}
-            className="flex items-center gap-2 rounded-full bg-red-600 hover:bg-red-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:scale-105 active:scale-95"
+            className="flex items-center justify-center w-14 h-14 rounded-full text-white font-semibold transition-all btn-interact bg-[#FF453A] hover:bg-[#E03E34]"
             title="Leave meeting"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5z" /></svg>
-            <span>Leave</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5z" /></svg>
           </button>
         </div>
       </div>
