@@ -14,6 +14,7 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -88,7 +89,10 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail || res.status);
+        const detail =
+          typeof data.detail === "string"
+            ? data.detail
+            : JSON.stringify(data.detail || res.status);
         throw new Error(detail);
       }
       const data = await res.json();
@@ -99,6 +103,43 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
       setLoading(false);
     }
   }, [name, duration, onProceed]);
+
+  const handleUploadFile = useCallback(async () => {
+    if (!uploadFile) {
+      setError("Please select an MP3 file to upload.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("name", (name.trim() || "session") + "_" + Date.now());
+      formData.append(
+        "samples",
+        uploadFile,
+        uploadFile.name || "sample.mp3"
+      );
+
+      const res = await fetch(`${API_BASE}/api/clone`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const detail =
+          typeof data.detail === "string"
+            ? data.detail
+            : JSON.stringify(data.detail || res.status);
+        throw new Error(detail);
+      }
+      const data = await res.json();
+      onProceed(data.user.voiceId);
+    } catch (err) {
+      setError(err.message || "Voice clone failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [name, onProceed, uploadFile]);
 
   const handleSkip = useCallback(() => {
     onProceed(null);
@@ -218,6 +259,32 @@ export default function VoiceClonePage({ roomId, onProceed, onBack }) {
               Start Recording
             </button>
           )}
+
+          <div className="mt-6 space-y-3">
+            <label className="block text-sm font-medium" style={{ color: "#A1A1AA" }}>
+              Or upload an MP3 file
+            </label>
+            <input
+              type="file"
+              accept="audio/mpeg,.mp3"
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                setUploadFile(file);
+              }}
+              className="w-full text-sm text-[#D1D5DB] file:mr-4 file:rounded-lg file:border file:border-[#2A2A32] file:bg-[#111116] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#D1D5DB] hover:file:bg-[#1C1C22]"
+            />
+            <button
+              onClick={handleUploadFile}
+              disabled={loading || !uploadFile}
+              className="w-full rounded-xl h-12 text-sm font-semibold transition-all btn-interact disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              style={{ background: "#4F9CF9", color: "#0B0B0F" }}
+            >
+              {loading ? "Cloning..." : "Upload MP3 & Clone Voice"}
+            </button>
+            <p className="text-xs" style={{ color: "#A1A1AA" }}>
+              Use a clear 30–60 second recording of your voice in .mp3 format.
+            </p>
+          </div>
 
           {error && (
             <div

@@ -20,12 +20,15 @@ async def clone_voice(name: str, samples: list[tuple[bytes, str]]) -> str:
 
     files = []
     for i, (data, content_type) in enumerate(samples):
+        content_type = content_type or "audio/wav"
         if "webm" in content_type:
             ext = "webm"
         elif "ogg" in content_type:
             ext = "ogg"
         elif "mp4" in content_type:
             ext = "mp4"
+        elif "mpeg" in content_type or "mp3" in content_type:
+            ext = "mp3"
         else:
             ext = "wav"
         files.append(("files", (f"sample_{i + 1}.{ext}", data, content_type)))
