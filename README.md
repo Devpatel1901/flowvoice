@@ -129,17 +129,14 @@ flowchart TB
   Mic --> WsClient --> WsRoom
   WsRoom --> RoomMgr
 
-  %% Stutter user pipeline
   WsRoom -->|PCM stream| ASR -->|Final text| Clean -->|Cleaned text| TTS -->|MP3| Hold -->|MP3 prefixed 0x01| WsRoom --> WsClient --> Player
 
-  %% Listener pipeline
   WsRoom -->|Listener PCM| VAD -->|speaking start| Hold
   VAD -->|speaking stop| Hold
   Hold -->|interrupt JSON| WsRoom
   WsRoom -->|Listener PCM relayed prefixed 0x02| WsClient --> Player
 
-  %% Voice clone control path
-  UI -->|POST /api/clone (webm/mp3)| Clone
+  UI -->|clone request| Clone
   Clone -->|voice_id| RoomMgr
 ```
 
